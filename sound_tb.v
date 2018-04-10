@@ -1,4 +1,5 @@
 module test;
+# test sn76489 on a memory bus
 
 // Clocks
 
