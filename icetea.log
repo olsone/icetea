@@ -1,0 +1,79 @@
+IceTea Project
+
+Software Time Log
+
+Shift registers, addrbus implementation, testbench
+
+timings
+100 MHz clk is 10 ns full cycle
+
+t_w Pulse Duration
+
+CLK high or low = 7ns , means use 50 MHz to drive LV165
+SH/LD low 7.5 or 9 ns - same condition
+
+Setup time
+SH/LD high before CLK^ 8 ns - SH/LD rise for 1 low CLK
+
+= 
+shift_ser_in samples at count=1 3 5 7 9 11 13 15
+shift74ls165 shifts  at count= 2 4 6 8 10 12 14
+done at count 16
+
+iverilog -g2005-sv -o shift -c all.txt
+
+iverilog -g2005-sv -o mem -c memory.txt
+
+
+[3] Saturday 3/17/2018
+1000-1100 setup icarus
+2200-2400 shift_ctrl.v shift74ls165.v
+
+[2] Sunday 3/18 
+1600 - 1700 clockgen.v
+2100 - 2200 mem_read_gen.v
+
+[6] Monday 3/19
+1530 - 1700 mem_read_gen.v
+1730 - 1830 mem_write_gen.v
+2200 - 2530  memory_interface.v memory_interface_tb.v
+
+[2] Friday 3/23/18
+SRAM pin interface
+
+[2] Saturday 3/24/18
+bank registers
+
+[3] Monday 3/26/18
+cru_interface
+banks rewritten
+
+[2] Tuesday 3/27/18
+use bank flags
+figure why obtain address takes 180ns in tb, but 360 in memory_interface? state 1 => 2
+
+[2] Thursday 3/29/18
+2115-2315 studying if cru meets timing constraints. cru_interface. obtain address on every negedge phi3 in memory_interface. cru_read_gen, cru_write_gen
+
+
+FD1771 FDSEL*:
+MBE active, A3,4,5,6,12 high
+$5Exx8   four registers
+$5Fxx8
+FDSEL* also enters NAND with HI ROM CS1* (the rom at $5000)
+
+
+[1] Friday 3/30/18
+1800-1900 preparing memory mapped device interface
+
+[4] Sunday 4/1/18
+2000-2400 implement SN76489 (x4 for FORTi)
+
+[1] Monday 4/2/18
+Move sound enable out of memory_interface. Try to make data_bus internally usable (for gram etc) by enforcing tri-state.
+
+[1] Wednesday 4/4/18
+Debug sound chip, memory mapped interface test.
+
+[1] Thursday 4/5/18
+Wave file generation from samples

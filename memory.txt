@@ -1,0 +1,10 @@
+clockgen.v
+cru_interface.v
+mem_read_gen.v
+mem_write_gen.v
+memory_interface.v
+memory_interface_tb.v
+shift_ctrl.v
+shift_ser_in.v
+shift74ls165.v
+sn76489.v
