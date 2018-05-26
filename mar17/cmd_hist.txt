@@ -1,0 +1,407 @@
+112	 git fetch
+113	 ls
+114	 git status
+115	 ls -ltr
+116	 git status
+117	 git pull --help
+118	 git pull
+119	 vi ~/.bashrc
+120	 git info
+121	 git remote
+122	 git pull https://github.com/olsone/swapforth/tree/pmods/
+123	 git pull https://github.com/olsone/swapforth origin/pmods
+124	 git pull https://github.com/olsone/swapforth pmods
+125	 rm i2s.fs irda.fs sd.fs icestorm/j1a-iceblink.pcf 
+126	 git pull https://github.com/olsone/swapforth pmods
+127	 more i2s.fs
+128	 ls doit
+129	 cat doit
+130	 bbedit i2s.v
+131	 ls *plan*
+132	 diff *plan*
+133	 cat doit
+134	 doit
+135	 ./doit
+136	 sudo brew install gtkwave
+137	 brew install gtkwave
+138	 brew install Caskroom/cask/gtkwave
+139	 brew update
+140	 brew install Caskroom/cask/gtkwave
+141	 cd $(brew --repo); git fetch; git reset --hard origin/master
+142	 brew untap caskroom/cask; brew cleanup; brew cask cleanup; brew update
+143	 brew install Caskroom/cask/gtkwave
+144	 cat doit
+145	 cd
+146	 cd swapforth/
+147	 cd j1a
+148	 cat doit
+149	 ls
+150	 ls -ltr
+151	 pwd
+152	 cd
+153	 ls
+154	 cd Lattice/
+155	 cd swapforth/
+156	 cd j1a
+157	 ls
+158	 cat doit
+159	 gtkwave i2s.vcd
+160	 brew info gtkwave
+161	 which chess
+162	 which Gtkwave
+163	 which GTKWave
+164	 which bbedit
+165	 cat /usr/local/bin/bbedit 
+166	 /Applications/gtkwave.app  i2s.vcd 
+167	 open -a gtkwave i2s.vcd
+168	 make connect
+169	 ls /dev/tty*
+170	 sudo kextunload -b com.apple.driver.AppleUSBFTDI
+171	 make connect
+172	 ls /dev/tty.usb*
+173	 sudo kextload -b com.apple.driver.AppleUSBFTDI
+174	 ls /dev/tty.usb*
+175	 make connect
+176	 make connect
+177	 make connect
+178	 make connect
+179	 make connect
+180	 bc
+181	 doit
+182	 cat doit
+183	 cat doit
+184	 vi doit
+185	 doit
+186	 ./doit
+187	 vi doit
+188	 ./doit
+189	 ls *v
+190	 cat counter.v
+191	 ./doit
+192	 ./doit
+193	 ./doit
+194	 bbdedit counter.v
+195	 bbedit counter.v
+196	 ls counter*
+197	 cat counter_tb.v 
+198	 cat doit
+199	 iverilog -o counter counter.v  counter_tb.v 
+200	 vvp counter 
+201	 open -a gtkwave counter.vcd
+202	 ls *vcd
+203	 ls -l *vcd
+204	 grep vcd *
+205	 vi counter_tb.v 
+206	 iverilog -o counter counter.v  counter_tb.v 
+207	 vi i2s_tb.v 
+208	 bbedit i2s_tb.v 
+209	 bbedit counter_tb.v 
+210	 iverilog -o counter counter.v  counter_tb.v 
+211	 iverilog -o counter counter.v  counter_tb.v 
+212	 vvp counter 
+213	 open -a gtkwave counter.vcd
+214	 open -a gtkwave i2s.vcd
+215	 doit
+216	 ./doit
+217	 ./doit
+218	 vi doit
+219	 ./doit
+220	 ./doit
+221	 ./doit
+222	 ./doit
+223	 bbedit makefile
+224	 cat doit
+225	 vvp --help
+226	 vvp i2s <<HERE
+227	 vvp -n i2s 
+228	 make i2s
+229	 rm i2s
+230	 make i2s
+231	 gtkwave --help
+232	 rm counter
+233	 make counter
+234	 make counter
+235	 bbedit shiftreg.v
+236	 cp counter.v shiftreg.v
+237	 cp counter_tb.v shiftreg_tb.v
+238	 bbedit shiftreg.v
+239	 make shiftreg
+240	 bbedit shiftreg_tb.v
+241	 make shiftreg
+242	 make shiftreg
+243	 make shiftreg
+244	 make shiftreg
+245	 make shiftreg
+246	 make i2s
+247	 make shift
+248	 make shift
+249	 make shift
+250	 make shift
+251	 make shift
+252	 make square
+253	 make square
+254	 make square
+255	 make square
+256	 make square
+257	 make square
+258	 make square
+259	 make square
+260	 bbedit squarei2s.v
+261	 make square
+262	 make square
+263	 make squarei2s
+264	 make squarei2s
+265	 make squarei2s
+266	 make squarei2s
+267	 make squarei2s
+268	 make squarei2s
+269	 make i2s
+270	 bc
+271	 yosys -d i2s.ys
+272	 make i2s
+273	 yosys -d i2s.ys
+274	 make i2s
+275	 make i2s
+276	 make i2s
+277	 make i2s
+278	 make i2s
+279	 make i2s
+280	 make i2s
+281	 make squarei2s
+282	 make square
+283	 make square
+284	 make i2s
+285	 make square
+286	 make clockdiv
+287	 make clockdiv
+288	 make clockdiv
+289	 make clockdiv
+290	 make clockdiv
+291	 make clockdiv
+292	 make clockdiv
+293	 make clockdiv
+294	 make clockdiv
+295	 make clockdiv
+296	 make squarei2s
+297	 make squarei2s
+298	 make i2s
+299	 rm i2s
+300	 make i2s
+301	 make i2s
+302	 make i2s
+303	 make i2s
+304	 make i2s
+305	 make i2s
+306	 make i2s
+307	 rm i2s
+308	 ls i2s.*
+309	 rm i2s.vcd
+310	 make i2s
+311	 make i2s
+312	 make i2s
+313	 make i2s
+314	 make i2s
+315	 doit
+316	 ls
+317	 pwd
+318	 pwd
+319	 pwd
+320	 cp i2s.v ~/swapforth/j1a/
+321	 cp Makefile *.v ~/swapforth/j1a/
+322	 diff . ~/swapforth/j1a/
+323	 diff -q . ~/swapforth/j1a/
+324	 cp i2s.fs  ~/swapforth/j1a/
+325	 cp plan.txt  ~/swapforth/j1a/
+326	 ls -l sd.fs
+327	 diff -q . ~/swapforth/j1a/
+328	 ssh colfax
+329	 ssh colfax
+330	 ssh colfax
+331	 ssh colfax
+332	 cd swapforth/
+333	 cd j1a
+334	 cd
+335	 cd Lattice/
+336	 cd swapforth/
+337	 cd j1a
+338	 ls
+339	 git status
+340	 git add shift.v
+341	 git add shiftreg.v
+342	 git add square.v squarei2s.v
+343	 ls *tb.v
+344	 git add *tb.v
+345	 ls *b
+346	 ls *v
+347	 git add *\.v
+348	 git status
+349	 git add hdr1.fs
+350	 git add sh115200.py 
+351	 git commit
+352	 git commit --elp
+353	 git commit --help
+354	 git status
+355	 git add Makefile 
+356	 git status
+357	 git add doit i2s.fs plan.txt
+358	 git commit
+359	 sxzzzzxzzzzzzzzzzzΩΩΩΩΩΩΩΩΩΩΩΩzzzzzzzzzzzzzzzzzzzzzzzzz
+360	 git status
+361	 ls counter*
+362	 rm counter
+363	 git push origin pmods
+364	 git remote add origin https://github.com/olsone/swapforth
+365	 git remote --help
+366	 git remote
+367	 git push origin pmod
+368	 pwd
+369	 ls ~/swapforth/
+370	 ls ~/swapforth/j1a
+371	 ls -l ~/swapforth/j1a/i2s.fs
+372	 ls i2s.fs
+373	 ls -l i2s.fs
+374	 ls -ltr *fs
+375	 ls -ltr *v
+376	 git status i2s.v
+377	 git push origin/pmods
+378	 git push https://github.com/olsone/swapforth origin/pmods
+379	 git push https://github.com/olsone/swapforth /pmods
+380	 git push https://github.com/olsone/swapforth pmods
+381	 git push https://github.com/olsone/swapforth 
+382	 git status
+383	 rm *vcd
+384	 git status
+385	 pwd
+386	 l
+387	 ls
+388	 pwd
+389	 git status
+390	 ls plan.txt 
+391	 rm i2s\ plan.txt 
+392	 rm i2 square shiftreg shift
+393	 rm squarei2s
+394	 ls -F
+395	 rm i2s log localtest
+396	 git status
+397	 rm clockdiv
+398	 more i2s.ys
+399	 ls
+400	 git status
+401	 git remove counter
+402	 git delete counter
+403	 git rm counter
+404	 git rm localtest
+405	 git push
+406	 git commit
+407	 git push
+408	 git push --set-upstream origin origin/pmods
+409	 pwd
+410	 ls
+411	 diff . ~/swapforth/j1a
+412	 diff --help
+413	 diff -q . ~/swapforth/j1a
+414	 cp *.v ~/swapforth/j1a/
+415	 diff -q . ~/swapforth/j1a
+416	 cp hdr1.fs ~/swapforth/j1a/
+417	 cp hdr1.fs.txt ~/swapforth/j1a/
+418	 cp plan.txt ~/swapforth/j1a/
+419	 ls -l plan.txt
+420	 diff -q . ~/swapforth/j1a
+421	 diff -q . ~/swapforth/j1a
+422	 cp Makefile ~/swapforth/j1a/
+423	 pwd
+424	 cd
+425	 cd swapforth/j1a
+426	 ssh colfax
+427	 ssh colfax
+428	 ssh colfax
+429	 pwd
+430	 cd
+431	 cd swapforth/
+432	 ls
+433	 cd j1a
+434	 ls
+435	 git status
+436	 pw
+437	 cd j1a
+438	 ls
+439	 pwd
+440	 git status
+441	 ls -l i2s.fs
+442	 rm localtest
+443	 ls -l sd.fs
+444	 ls -l plan.txt
+445	 ls
+446	 git status
+447	 git commit
+448	 git add Makefile
+449	 git commit
+450	 git add plan.txt
+451	 git commit
+452	 git push
+453	 git pull
+454	 git push origin --delete origin/pmods
+455	 git -d origin/pmods
+456	 git branch -d origin/pmods
+457	 git commit
+458	 git pull
+459	 ls -l i2s.v
+460	 rm j1a/counter.v
+461	 rm counter.v
+462	 rm counter_tb.v
+463	 rm hello.v
+464	 rm i2s.v
+465	 rm i2s_tb.v
+466	 git pull
+467	 rm plan.txt
+468	 git pull
+469	 git rm plan.txt
+470	 git pull
+471	 git commit
+472	 git status
+473	 git commit
+474	 git rm localtst
+475	 git rm localtest
+476	 git commit
+477	 git status
+478	 git status i2s.fs
+479	 git push
+480	 git status
+481	 git status
+482	 git status
+483	 git add clockdiv.v clockdiv_tb.v
+484	 git add hdr1.fs hdr1.fs.txt
+485	 git add plan.txt 
+486	 git add shift.v
+487	 git add shift_tb.v
+488	 git add shiftreg.v
+489	 git add shiftreg_tb.v
+490	 git add square.v
+491	 git add squarei2s.v
+492	 git add squarei2s_tb.v
+493	 git add square_tb.v
+494	 git status
+495	 git add i2s.fs i2s.v i2s_tb.v
+496	 git add counter_tb.v 
+497	 git comit
+498	 git commit
+499	 git push
+500	 ls -l sd.fs
+501	 git status
+502	 git update
+503	 git pull
+504	 git push
+505	 git add i2s.v
+506	 git push
+507	 git commit
+508	 git add squarei2s.v
+509	 git add squarei2s_tb.v 
+510	 git commit
+511	 git status
+512	 i2s
+513	 fc -l
+514	 fc -l 30
+515	 fc -l 512 > cmd_hist.txt
+516	 bbedit cmd_hist.txt 
+517	 fc -l 1 > cmd_hist.txt
+518	 fc -l 312 > cmd_hist.txt
