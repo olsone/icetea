@@ -1,0 +1,168 @@
+###############################################################################
+#                                                                             #
+# Copyright 2017 myStorm Copyright and related                                #
+# rights are licensed under the Solderpad Hardware License, Version 0.51      #
+# (the “License”); you may not use this file except in compliance with        #
+# the License. You may obtain a copy of the License at                        #
+# http://solderpad.org/licenses/SHL-0.51. Unless required by applicable       #
+# law or agreed to in writing, software, hardware and materials               #
+# distributed under this License is distributed on an “AS IS” BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or             #
+# implied. See the License for the specific language governing                #
+# permissions and limitations under the License.                              #
+#                                                                             #
+###############################################################################
+
+# User Constraint File for myStorm BlackIce II   - Ken Boak   09-12-17
+
+#pmod 1 (Uart pmod)
+set_io PMOD[0] 94 # rd6
+set_io PMOD[1] 91 # rd4 shared with RTS and pin 128 see below
+set_io PMOD[2] 88 # rd2
+set_io PMOD[3] 85 # rd0
+
+#pmod 2
+set_io PMOD[4] 95 # rd7
+set_io PMOD[5] 93 # rd5
+set_io PMOD[6] 90 # rd3
+set_io PMOD[7] 87 # rd1
+
+#pmod 3 GPIO
+set_io PMOD[8] 105 # c5
+set_io PMOD[9] 102 # c3
+set_io PMOD[10] 99 # c1
+set_io PMOD[11] 97 # i_tx
+
+#pmod 4
+set_io PMOD[12] 104 # c4
+set_io PMOD[13] 101 # c2
+set_io PMOD[14] 98 # c0
+set_io PMOD[15] 96 # i_rx
+
+#pmod 5 GPIO
+set_io PMOD[16] 143 #g2
+set_io PMOD[17] 114 #c11
+set_io PMOD[18] 112 #c9
+set_io PMOD[19] 107 #c7
+
+#pmod 6 GPIO
+set_io PMOD[20] 144 #G1
+set_io PMOD[21] 113 #C10
+set_io PMOD[22] 110 #C8
+set_io PMOD[23] 106 #C6
+
+#pmod 7 lvds pairs 2 & 5
+set_io BDB[2] 10 # 5b   bd2     io
+set_io BDB[0] 9 # 5a    bd0     io
+set_io BDB[5] 2 # 2b    bd5     io
+set_io BDB[6] 1 # 2a    bd6     io
+
+#pmod 8 lvds pairs 3 & 4
+set_io BDB[3] 8 # 4b    bd3     io
+set_io BDB[1] 7 # 4a    bd1     io
+set_io BDB[4] 4 # 3b    bd4     io
+set_io BDB[7] 3 # 3a    bd7     io
+
+#pmod 9 lvds pairs 10 & 13
+set_io BMEMEN   20 # 13b  bmemen   i
+set_io BPHI3    19 # 13a  bphi3    i
+set_io CRUOUT   16 # 10b  a15/cruout   i
+set_io BRESET   15 # 10a  breset   i
+
+#pmod 10 lvds pairs 8 & 12
+set_io BIAQ     18 # 12b  biaq     i
+set_io BWE      17 # 12a  bwe      i
+set_io BCRUCLK  12 # 8b   bcruclk  i
+set_io BDBIN    11 # 8a   bdbin    i
+
+
+#pmod 11 lvds pairs 14 & 25
+set_io BDBDIR   34 # 25b  dbdir    o 
+set_io SHLD     33 # 25a  shld     o
+set_io ADRIN2   22 # 14B  adrin2   i 
+set_io EN_CRUIN 21 # 14a  en_cruin o  
+
+#pmod 12 lvds pairs 18 & 24
+set_io RDBENA   32 # 24b  rdbena  o
+set_io ADRIN1   31 # 24a  adrin1  i
+set_io SRCLK    26 # 18b  srclk   o
+set_io BCRUIN   25 # 18a  bcruin  o
+
+#pmod 13 DIG16-DIG19
+
+set_io PMODC[0] 37  # DIG19
+set_io PMODC[1] 38  # DIG18
+set_io PMODC[2] 39  # DIG17
+set_io PMODC[3] 41  # DIG16
+
+#pmod 14 SPI muxed with leds
+set_io PMODC[4] 71 #LD4,!SS,p14_1
+set_io PMODC[5] 67 #LD3,MISO,p14_2
+set_io PMODC[6] 68 #LD2,MOSI,p14_3
+set_io PMODC[7] 70 #LD1,SCL,p14_4
+# Buttons
+set_io B1 63 # Push Button 1
+set_io B2 64 # Push Button 2#
+
+
+# SRAM
+set_io ADR[0] 137
+set_io ADR[1] 138
+set_io ADR[2] 139
+set_io ADR[3] 141
+set_io ADR[4] 142
+set_io ADR[5] 42
+set_io ADR[6] 43
+set_io ADR[7] 44
+set_io ADR[8] 73
+set_io ADR[9] 74
+set_io ADR[10] 75
+set_io ADR[11] 76
+set_io ADR[12] 115
+set_io ADR[13] 116
+set_io ADR[14] 117
+set_io ADR[15] 118
+set_io ADR[16] 119
+set_io ADR[17] 78
+
+set_io DAT[0] 136
+set_io DAT[1] 135
+set_io DAT[2] 134
+set_io DAT[3] 130
+set_io DAT[4] 125
+set_io DAT[5] 124
+set_io DAT[6] 122
+set_io DAT[7] 121
+set_io DAT[8] 62
+set_io DAT[9] 61
+set_io DAT[10] 60
+set_io DAT[11] 56
+set_io DAT[12] 55
+set_io DAT[13] 48
+set_io DAT[14] 47
+set_io DAT[15] 45
+
+set_io RAMOE 29
+set_io RAMWE 120
+set_io RAMCS 23
+set_io RAMUB 28
+set_io RAMLB 24
+
+# QUAD SPI
+set_io QSPICSN 81
+set_io QSPICK 82
+set_io QSPIDQ[0] 83
+set_io QSPIDQ[1] 84
+set_io QSPIDQ[2] 79
+set_io QSPIDQ[3] 80
+
+# Debug
+set_io DONE 52 # DONE - GBIN4
+set_io DBG1 49 # DBG1 - GBIN5
+
+# Internal global reset
+set_io greset 128 # Connected to CH340 RTS and also P1 (uart Pmod above)
+
+# Onboard 100Mhz oscillator
+set_io clk 129
+
