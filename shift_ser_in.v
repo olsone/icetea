@@ -7,17 +7,14 @@ module shift_ser_in(in, reset, serclk, out);
   
   reg       [WIDTH-1 : 0] store;
   
-  always @(negedge serclk)
-  begin
-     store = {store[WIDTH-2 : 0],in};
-  end
-  
-  always @(reset)
+  always @(negedge serclk or negedge reset)
   begin
     if (!reset)
       store = 8'bxxxxxxxx;
+    else
+      store = {store[WIDTH-2 : 0],in};
   end
-
+  
   // output wires
   assign out = store;
 

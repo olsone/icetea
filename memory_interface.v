@@ -2,13 +2,15 @@ module memory_interface(
     // Host control lines and memory bus
     input wire clk,
     input wire phi3, 
-    inout [7:0] data_bus,
-    output reg[15:0] address_bus, // plain cpu address
+    input  wire [7:0] data_bus_in,
+    output wire [7:0] data_bus_out,
+    output reg [15:0] address_bus, // decoded cpu address bus
+    output reg [7:0] data_bus,    // synchronized data bus in, for peripherals
     input wire memen, 
     input wire dbin, 
     input wire we,
     input wire a15,
-    output reg dbdir,
+    output wire dbdir,
     output reg rdbena,
     // Serial interface for address bus
     output wire shld, 
@@ -20,13 +22,13 @@ module memory_interface(
     output memory_cycle_begin,
 
     // SRAM pins
-    output wire data_pins_out_en,       // when to switch between in and out on data pins
+    output wire sram_data_out_en,       // when to switch between in and out on data pins
     output wire [17:0] address_pins,    // address pins of the SRAM
-    input  wire [15:0] data_pins_in,
-    output wire [15:0] data_pins_out,
-    output wire OE,                     // output enable - low to enable
-    output wire WE,                     // write enable - low to enable
-    output wire CS,                      // chip select - low to enable
+    input  wire [15:0] sram_data_in,
+    output wire [15:0] sram_data_out,
+    output wire RAMOE,                     // output enable - low to enable
+    output wire RAMWE,                     // write enable - low to enable
+    output wire RAMCS,                      // chip select - low to enable
     // Memory Mapper (read side) interface
     output reg [3:0] bank_sel,
     input  wire bank_mapped,
@@ -40,9 +42,9 @@ module memory_interface(
 // TODO:
 // keep databus Z unless address is to one of our pages.
 // decode memory mapped devices.
-
 // add CRU write to enable DSR roms (in cru_interface.v)
 // add GROM and VDP memory access.
+
   reg  [2:0] state;
   reg  [15:0] addr_reg;
 
@@ -110,6 +112,16 @@ module memory_interface(
       memory_cycle_begin = 0;
   end
   
+      
+  always @(posedge memen) begin
+    state <= STATE_IDLE;
+    shift_reset <= 1;
+    decoded_addr <= 18'hxxxx;
+    output_enable <= 0;
+    write_enable <= 0;
+    chip_select <= 0;
+  end
+  
   always @(posedge clk) begin
     case (state)
     // Idle state. an address read can begin on any negedge(phi3)
@@ -127,7 +139,7 @@ module memory_interface(
       end
     // Reading Address from shift registers
     STATE_OBTAIN_ADDRESS : 
-      if (address_ready) begin
+      if (addr_reg_done) begin
         // TODO: unscramble address bits
         // 15 : A9 A2 A6 A1,    11 : A0 A15 A7 A8
         //  7 : A5 A4 A12 A14,   3 : A13 A3 A11 A10
@@ -161,7 +173,7 @@ module memory_interface(
     STATE_READ1 : begin
       // fetch word from SRAM
       // TODO: wait states?
-      data_read_reg <= data_pins_in;
+      data_read_reg <= sram_data_in;
       state = STATE_READ2;
       end
     STATE_READ2: begin
@@ -169,9 +181,9 @@ module memory_interface(
     
     STATE_WRITE1:
       if (we) begin
-        if (a15) data_write_reg[7:0] = data_bus;
+        if (a15) data_write_reg[7:0] = data_bus_in;
         if (!a15)  begin
-          data_write_reg[15:8] <= data_bus; // when is databus stable? do we need a condition using phi3?
+          data_write_reg[15:8] <= data_bus_in; // when is databus stable? do we need a condition using phi3?
           state = STATE_WRITE2;
         end
       end
@@ -183,37 +195,30 @@ module memory_interface(
   end
 
   // SRAM interface
-    assign data_pins_out_en = (state == STATE_WRITE1 || state == STATE_WRITE2); // positive logic. turn on output pins when writing data
+    assign sram_data_out_en = (state == STATE_WRITE1 || state == STATE_WRITE2); // positive logic. turn on output pins when writing data
     assign address_pins = decoded_addr;
-    assign data_pins_out = data_write_reg;
-    assign data_read = data_read_reg;
+    assign sram_data_out = data_write_reg;
     
-    assign dbdir = !dbin;
-    assign OE = !output_enable;
-    assign WE = !write_enable;
-    assign CS = !chip_select;
+    assign dbdir = memen || !dbin;   // 1=reads 4A bus 0=drives 4A bus
+    // dbdir must be correct when rdbena=0 (active low, connected to databus)
+    
+    assign RAMOE = !output_enable;
+    assign RAMWE = !write_enable;
+    assign RAMCS = !chip_select;
 
   // host interface
   // sram to data_bus:
-  assign data_bus = (!memen && dbin && bank_mapped) ? (!a15 ? data_read_reg[15:8] : data_read_reg[7:0]) : 16'hzzzz; 
+  assign data_bus_out = (!memen && dbin && bank_mapped) ? (!a15 ? data_read_reg[15:8] : data_read_reg[7:0]) : 16'hzzzz; 
  
   // memory mapped devices (FORTi card)
   assign mm_enable = !memen && address_bus[15:10] == 3'b100;
-    
-  always @(posedge memen) begin
-    state <= STATE_IDLE;
-    shift_reset <= 1;
-    decoded_addr <= 18'hxxxx;
-    output_enable <= 0;
-    write_enable <= 0;
-    chip_select <= 0;
-  end
+
 
   wire [4:0] count;
   reg shift_reset;
-  wire address_ready;
+  wire addr_reg_done;
   
-  shift_ctrl ctrl1 (.reset(shift_reset), .clk(clk), .shld(shld), .serclk(serclk), .count(count), .done(address_ready));
+  shift_ctrl ctrl1 (.reset(shift_reset), .clk(clk), .shld(shld), .serclk(serclk), .count(count), .done(addr_reg_done));
   shift_ser_in ser1 (adrin1, shld, serclk, addr_reg[15:8]);
   shift_ser_in ser2 (adrin2, shld, serclk, addr_reg[7:0]);
   

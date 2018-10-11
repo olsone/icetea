@@ -1,3 +1,34 @@
+/*  cru_interface implements the paging in and out of DSR roms and SAMS memory, and potentially more.
+
+  In a 9900 computer architecture, CRU "communications register unit 9901" is a separate interface bus between
+  the 9900 and 9901 (programmable systems interface) and external peripherals. It uses 
+  the A0-A14 address bus and transfers 1-bit serial data over CRUIN, CRUOUT(A15), CRUCLK.
+
+  CRU instructions in the 9900 are: 
+    SBO d     set bit one
+    SBZ d     set bit zero
+    TB  d     test bit
+    LDCR s,n  load n cru bits into cru from s
+    STCR s,n  store n cru bits from cru into s
+  CRU instructions use R12 as the base address (only bits A0-A14)
+  For single bit intructioms, the CRU adress is R12 (A0-A14) + d (signed)
+   
+  Peripherals on the expansion bus each have a CRU base address from $1000 to $1f00, and respond to CRU instructions.
+  Each peripheral can have 128 bits of address space.
+  Their DSR ROMs are paged in at $4000 by setting a 1 at their CRU base address. 
+  Some known peripherals:
+   >1000 HFDC, WDS, HRD, any storage device taking priority over FDCC
+   >1100 FDCC Floppy Disk Controller
+   >1300 RS232
+  
+    LD R12,>1300
+    SBO 0    page in the rs232 DSR ROM at >4000. It is customary to enable this even for direct RS232 access.
+    SBZ 0    page out
+     
+  Peripherals have other registers in their CRU address space. For instance the RS232 has UART registers.
+  They may have registers in the CPU address space as well.
+*/
+
 module cru_interface(
   input wire clk,
   input wire cruclk,
@@ -15,7 +46,6 @@ module cru_interface(
   
   );
   
-  // The CRU interface is compatible with the TMS9900 and the peripheral expansion architecture of the TI-99/4A.
   
   // The CPU memory address model is based on the SuperAMS peripheral.
   // http://www.unige.ch/medecine/nouspikel/ti99/superams.htm
@@ -48,7 +78,8 @@ module cru_interface(
     sams_transparent = 0; // use default memory map
     cru_cardsel = 16'h0000; // all cards off. only one at a time should ever be enabled!
     
-    // SRAM use by 8k page
+    // iceTea uses the SRAM as follows: 
+    // 4k page number, use
     // 00 reserved (bug catcher) 
     // 02 low ram
     // 04 icetea main dsr rom 
@@ -66,9 +97,9 @@ module cru_interface(
     
     {bank_flags[0],  bank_flags[1]}  = {2'b00, 2'b00}; // $0000 console rom
     {bank_flags[2],  bank_flags[3]}  = {2'b10, 2'b10}; // $2000 low ram
-    {bank_flags[4],  bank_flags[5]}  = {2'b00, 2'b00}; // $4000 dsr rom
+    {bank_flags[4],  bank_flags[5]}  = {2'b00, 2'b00}; // $4000 dsr rom or ram
     {bank_flags[6],  bank_flags[7]}  = {2'b00, 2'b00}; // $6000 cart rom
-    {bank_flags[8],  bank_flags[9]}  = {2'b00, 2'b00}; // $8000 memory mapped space
+    {bank_flags[8],  bank_flags[9]}  = {2'b00, 2'b00}; // $8000 console memory mapped space
     {bank_flags[10], bank_flags[11]} = {2'b10, 2'b10}; // $A000 high ram
     {bank_flags[12], bank_flags[13]} = {2'b10, 2'b10}; // $C000 high ram
     {bank_flags[14], bank_flags[15]} = {2'b10, 2'b10}; // $E000 high ram
