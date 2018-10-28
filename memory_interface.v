@@ -1,5 +1,6 @@
 module memory_interface(
     // Host control lines and memory bus
+    input wire reset,
     input wire clk,
     input wire phi3, 
     input  wire [7:0] data_bus_in,
@@ -46,6 +47,7 @@ module memory_interface(
 // add GROM and VDP memory access.
 
   reg  [2:0] state;
+  reg  [2:0] nx_state;
   reg  [15:0] addr_reg;
 
   // logic to SRAM
@@ -54,17 +56,17 @@ module memory_interface(
   reg chip_select;
   reg [15:0] data_read_reg;
   reg [15:0] data_write_reg;
-  reg [17:0] decoded_addr;
+  reg [17:0] external_addr;
 
   // States
   localparam STATE_IDLE = 0;
   localparam STATE_OBTAIN_ADDRESS = 1;
   localparam STATE_DECODE_ADDRESS = 2;
-  localparam STATE_READ1 = 3;
-  localparam STATE_READ2 = 4; // A15 changing is a kind of substate
+  localparam STATE_READ_MEM = 3;
+  localparam STATE_READ_IO = 4; // A15 changing is a kind of substate
   
-  localparam STATE_WRITE1 = 6;
-  localparam STATE_WRITE2 = 7;
+  localparam STATE_WRITE_MEM = 6;
+  localparam STATE_WRITE_IO = 7;
 
   // States:
   //
@@ -77,66 +79,81 @@ module memory_interface(
   //   read bank register address
   //   write address to either pins in or pins out
   //
-  // STATE_READ1
+  // STATE_READ_MEM
   //   obtain data word from SRAM
   //   wait required?
-  // STATE_READ2
+  // STATE_READ_IO
   //   transfer word to host databus
   //
-  // STATE_WRITE1
+  // STATE_WRITE_MEM
   //   obtain data word from host databus
-  // STATE_WRITE2
+  // STATE_WRITE_IO
   //   store data word in SRAM
   //   wait required?
 
 
-  initial begin
-    state <= STATE_IDLE;
-    shift_reset <= 1;
-    bank_sel <= 0;
-    chip_select <= 0;
-    write_enable <= 0;
-    output_enable <= 0;        
-    rdbena <= 1; // negative logic
-    address_bus <= 16'b0;
+  reg   memory_cycle_begin;
+
+/////////////////////////////////////////////////////////////
+// Sequential logic
+/////////////////////////////////////////////////////////////
+
+  always @(posedge clk or posedge reset) begin
+   if (reset)
+     state = STATE_IDLE;
+   else
+     state = nx_state;
   end
 
-  reg   memory_cycle_begin;
+/////////////////////////////////////////////////////////////
+// Combinatorial logic
+/////////////////////////////////////////////////////////////
   
+  // maybe waiting for negedge phi3 should be a state.
   // Tie negedge phi3 into the state transition, while only assigning state in the always @(clk)
   // address is settled 100ns after negdge phi1. living dangerously would be to sample address at posedge phi3. (83 ns)
-  always @(negedge phi3) begin
-    if (state == STATE_IDLE)
-      memory_cycle_begin = 1;
-    else
-      memory_cycle_begin = 0;
-  end
+//  always @(negedge phi3) begin
+//    if (state == STATE_IDLE)
+//      memory_cycle_begin = 1;
+//    else
+//      memory_cycle_begin = 0;
+//  end
   
       
-  always @(posedge memen) begin
-    state <= STATE_IDLE;
-    shift_reset <= 1;
-    decoded_addr <= 18'hxxxx;
-    output_enable <= 0;
-    write_enable <= 0;
-    chip_select <= 0;
-  end
+  // next state logic
   
   always @(posedge clk) begin
+// don't really need this
+//    if (memen) begin
+//			nx_state <= STATE_IDLE;
+//    end
+//    else
+    
+    nx_state = state; // default
     case (state)
     // Idle state. an address read can begin on any negedge(phi3)
     STATE_IDLE : 
-      if (memory_cycle_begin) begin
+    begin
+      // formerly in the initial block:
+			bank_sel <= 4'b0000;
+			chip_select <= 0;
+			write_enable <= 0;
+			output_enable <= 0;        
+			rdbena <= 1; // negative logic
+			address_bus <= 16'b0;
+      external_addr <= 18'hxxxx;
+			
+      // obtain address even if memen high, for cru cycle.
+      if (!phi3) begin
+        nx_state = STATE_OBTAIN_ADDRESS;
         shift_reset <= 0; // let it run
         data_read_reg <= 16'hxxxx;
-        state = STATE_OBTAIN_ADDRESS;
-      end else begin
-        // Idle
-        chip_select <= 0;
-        write_enable <= 0;
-        output_enable <= 0;
-        rdbena <= 1;
+      end else
+  			shift_reset <= 1;
+      begin
       end
+      
+    end      
     // Reading Address from shift registers
     STATE_OBTAIN_ADDRESS : 
       if (addr_reg_done) begin
@@ -149,54 +166,63 @@ module memory_interface(
         memory_cycle_begin <= 0;
         bank_sel <= addr_reg[15:12];
         if (!memen)  
-          state = STATE_DECODE_ADDRESS;
+          nx_state = STATE_DECODE_ADDRESS;
         else
-          state = STATE_IDLE;        
+          nx_state = STATE_IDLE;        
       end
-    STATE_DECODE_ADDRESS: 
+
+    STATE_DECODE_ADDRESS : 
       begin
-          decoded_addr <= {bank_address[6:0], addr_reg[11:1]};
+          external_addr <= {bank_address[6:0], addr_reg[11:1]};
           if (bank_mapped) begin
             chip_select   <= 1; // positive logic
             output_enable <= dbin; // positive logic
             rdbena <= 0; // negative logic
+            // TODO: read only banks
             write_enable <= !dbin && !bank_readonly; // positive logic
-            // if readonly, the write will still appear on the data pins out, but it will not enter the SRAM.
-            state  = dbin ? STATE_READ1 : STATE_WRITE1;
+            // if bank_readonly, the write will still appear on the data pins out, but SRAM will not be enabled to accept it.
+            nx_state  = dbin ? STATE_READ_MEM : STATE_WRITE_MEM;
           end 
           else begin
             // memory mapped device?
             
-            state  = dbin ? STATE_READ2 : STATE_WRITE2;
+            nx_state  = dbin ? STATE_READ_IO : STATE_WRITE_IO;
           end
         end    
-    STATE_READ1 : begin
+    STATE_READ_MEM : begin
       // fetch word from SRAM
-      // TODO: wait states?
       data_read_reg <= sram_data_in;
-      state = STATE_READ2;
+      nx_state = STATE_READ_IO;
       end
-    STATE_READ2: begin
+    STATE_READ_IO: begin
+      // unfinished
+      // TODO: wait states?
+      nx_state = STATE_IDLE;
       end
     
-    STATE_WRITE1:
+    STATE_WRITE_MEM:
       if (we) begin
-        if (a15) data_write_reg[7:0] = data_bus_in;
-        if (!a15)  begin
+        if (a15) 
+          data_write_reg[7:0] <= data_bus_in;
+        else 
           data_write_reg[15:8] <= data_bus_in; // when is databus stable? do we need a condition using phi3?
-          state = STATE_WRITE2;
-        end
+        
+        if (!a15) 
+          nx_state = STATE_WRITE_IO;
+        
       end
-    STATE_WRITE2: begin
+    STATE_WRITE_IO: begin
         write_enable = 0;
+        nx_state = STATE_IDLE;
       end
 
     endcase
+//    end // if !memen
   end
 
   // SRAM interface
-    assign sram_data_out_en = (state == STATE_WRITE1 || state == STATE_WRITE2); // positive logic. turn on output pins when writing data
-    assign address_pins = decoded_addr;
+    assign sram_data_out_en = (state == STATE_WRITE_MEM || state == STATE_WRITE_IO); // positive logic. turn on output pins when writing data
+    assign address_pins = external_addr;
     assign sram_data_out = data_write_reg;
     
     assign dbdir = memen || !dbin;   // 1=reads 4A bus 0=drives 4A bus

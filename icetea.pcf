@@ -40,12 +40,14 @@ set_io PMOD[14] 98 # c0
 set_io PMOD[15] 96 # i_rx
 
 #pmod 5 GPIO
+# dig snd extra
 set_io PMOD[16] 143 #g2
 set_io PMOD[17] 114 #c11
 set_io PMOD[18] 112 #c9
 set_io PMOD[19] 107 #c7
 
 #pmod 6 GPIO
+# dig_snd_out lines
 set_io PMOD[20] 144 #G1
 set_io PMOD[21] 113 #C10
 set_io PMOD[22] 110 #C8
@@ -66,7 +68,7 @@ set_io BDB[7] 3 # 3a    bd7     io
 #pmod 9 lvds pairs 10 & 13
 set_io BMEMEN   20 # 13b  bmemen   i
 set_io BPHI3    19 # 13a  bphi3    i
-set_io CRUOUT   16 # 10b  a15/cruout   i
+set_io BCRUOUT  16 # 10b  a15/cruout   i
 set_io BRESET   15 # 10a  breset   i
 
 #pmod 10 lvds pairs 8 & 12

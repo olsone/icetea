@@ -17,7 +17,7 @@ module chip (
     // 4A Interface pins
     input  BMEMEN,
     input  BPHI3,
-    input  CRUOUT,
+    input  BCRUOUT,
     input  BRESET,
     input  BIAQ,
     input  BWE,
@@ -44,9 +44,12 @@ module chip (
   assign RAMUB = 1'b1;
 
   // Set unused pmod pins to default
-  assign PMOD[23:0] = {24{1'bz}};
+  assign PMOD[15:0] = {16{1'bz}};
   assign PMODC[3:0] = {4{1'bz}};
-
+  
+  // CRU not implemented
+  assign EN_CRUIN = 1'b1;
+  
   // only the databus is bidirectional
   reg        BDBDIR;
   reg  [7:0] bdb_out;
@@ -67,6 +70,7 @@ module chip (
   // SRAM
   wire [15:0] DAT_in;
   wire [15:0] DAT_out;
+  wire DAT_out_en;
   
   SB_IO #(
     .PIN_TYPE(6'b 1010_01),
@@ -80,12 +84,13 @@ module chip (
   
 
   // Derived Clocks  
-  wire sndclk, vdpclk;
+  wire sndclk, vdpclk, i2sclk;
   
-  pll_ntsc myclk(
+  pll_32768 myclk(
     .clock_in (clk),
     .vdpclock_out(vdpclk),
-    .sndclock_out(sndclk)
+    .sndclock_out(sndclk),
+    .i2sclock_out(i2sclk)
   );
   
   blink my_blink (
@@ -93,12 +98,14 @@ module chip (
     .rst  (greset),
     .leds (PMODC[7:4]), // red, yellow, green, blue
   );
+  
   wire [7:0] data_bus;      // copy of whats on the data bus from memory_interface
   wire [15:0] address_bus;  // decoded address from memory cycle
-
+  
   memory_interface mem(
-    // Host control lines and memory bus
+    .reset(greset),
     .clk(clk),
+    // Host control lines and memory bus
     .phi3(BPHI3), 
     .data_bus_in(bdb_in),
     .data_bus_out(bdb_out),
@@ -124,16 +131,43 @@ module chip (
     .RAMWE(RAMWE),                     // write enable - low to enable
     .RAMCS(RAMCS),                      // chip select - low to enable
   );  
-  wire en_sound1 = (address_bus[15:8] != 8'h84); // active low
+  
+  //wire en_sound1 = (address_bus[15:8] != 8'h84); // active low
+  wire en_sound1 = 1'b1;
+  wire we_sound = 1'b1; // BWE
+  wire [7:0] snd_bus = 8'h00;
+  
   wire [7:0] sound_sample;
+  wire [3:0] sndbits;
   
   sn76489 sound1(
     .clk(clk),
     .reset(greset),
     .sndclk(sndclk),
-    .data_bus(data_bus),
+    .i_data_bus(snd_bus),
     .cs(en_sound1),
-    .we(BWE),
-    .sample(sound_sample)   
+    .we(we_sound),
+    .o_sample(sound_sample),
+    .o_bits(sndbits)   
   );
+
+  assign PMOD[16] = 0; // sndbits[0];
+  assign PMOD[17] = 0; // sndbits[1];
+  assign PMOD[18] = 0; // sndbits[2];
+  assign PMOD[19] = sndbits[3];
+  
+//  wire mclk, lrclk, sdin, sclk; // to   
+  i2s snd_dac(
+		.i_sample(sound_sample),
+		.clk(i2sclk), // 28.576 MHz is in between recommended 24.576 or 32.768 (96 kHz or 128kHz Fs)
+		.reset(greset), 
+		// outputs
+		.o_mclk (PMOD[20]), 
+		.o_lrclk(PMOD[21]), 
+		.o_sdin (PMOD[22]),
+		.o_sclk (PMOD[23])
+	);
+
+
+
 endmodule

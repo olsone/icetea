@@ -65,3 +65,19 @@ chip.v
 \____pll_ntsc.v
 \____memory_interface.v ==/== SRAM
 \____
+
+
+
+
+
+
+===================
+
+
+Weird errors
+
+ERROR: Mismatch in directionality for cell port chip.dig_snd_out.mclk: \PMOD [20] <= \dig_snd_out.mclk
+caused by assigning Z to it somewhere:
+  assign PMOD[20:0] = {20{1'bz}};
+
+

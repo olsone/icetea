@@ -6,15 +6,11 @@
  * Use at your own risk.
  *
  * Given input frequency:       100.000 MHz
- * Requested output frequency:   28.636 MHz
- * Achieved output frequency:    28.646 MHz
+ * Requested output frequency:   24.576 MHz
+ * Achieved output frequency:    24.554 MHz
  */
 
-// 8x NTSC colorburst frequency
-// icepll -o 28.636363 -i 100 -m -f pll_ntsc.v
-// Error 0.035%
-
-module pll_ntsc(
+module pll_32768(
 	input  clock_in,
 	output vdpclock_out,
 	output sndclock_out,
@@ -22,28 +18,28 @@ module pll_ntsc(
 	output locked
 	);
 
-wire clock8x;
-
 SB_PLL40_CORE #(
 		.FEEDBACK_PATH("SIMPLE"),
-		.DIVR(4'b0101),		// DIVR =  5
-		.DIVF(7'b0110110),	// DIVF = 54
+		.DIVR(4'b0001),		// DIVR =  1
+		.DIVF(7'b0010100),	// DIVF = 20
 		.DIVQ(3'b101),		// DIVQ =  5
-		.FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
+		.FILTER_RANGE(3'b100)	// FILTER_RANGE = 4
 	) uut (
 		.LOCK(locked),
 		.RESETB(1'b1),
 		.BYPASS(1'b0),
 		.REFERENCECLK(clock_in),
-		.PLLOUTCORE(clock8x)
+		.PLLOUTCORE(clock_out)
 		);
+
 		
 	reg [5:0] count;
-	assign vdpclock_out = count[2]; // 3.579545 MHz,  actual 3.580750
-	assign sndclock_out = count[5]; // 447.443 KHz, actual 447.593 KHz
-  assign i2sclock_out = count[0];  // 14 MHz not 28.646 MHz
+	assign vdpclock_out = count[2]; // not even close
+	assign sndclock_out = count[4]; // 256 KHz, wanted 447 KHz
+  // don't use clock_out as a digital signal. Average out the skew.
+  assign i2sclock_out = count[1]; // 8.192 MHz
 
-	always @(posedge clock8x)
+	always @(posedge clock_out)
 	    if (!locked)
 	        count = 0;
 	    else
