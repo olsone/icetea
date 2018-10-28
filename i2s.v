@@ -17,21 +17,18 @@ module i2s(i_sample, clk, reset, o_mclk, o_lrclk, o_sdin, o_sclk);
   output wire o_mclk;
   output wire o_lrclk, o_sdin, o_sclk;
   
-// internal memory
-  // ratio of o_lrclk/o_mclk external is 256
   reg [23 : 0 ] i; // 8 bits for stereo cycle, but 24 bits to count until startup charging delay
   reg [WIDTH-1 : 0] shifter; // only 24 bits are significant to CS4344; only WIDTH bits are loaded.
-
-  // o_sclk is half rate of o_mclk.
-  // o_sdin must be stable on posedge o_sclk.
-  // CS4344: MSB must appear at 2nd posedge o_mclk after o_lrclk. 
   
   reg resetn = 0;
 // combinatorial
-  assign o_mclk  = clk; // 8.192 MHz
+  assign o_mclk  = clk;           // 8.192 MHz
   assign o_sclk  = resetn & i[1]; // 2.048 MHz
   assign o_lrclk = resetn & i[7]; // 32 kHz
-  assign o_sdin  = resetn  & shifter[WIDTH-1];
+  assign o_sdin  = resetn & shifter[WIDTH-1];
+  // ratio of o_lrclk/o_mclk is 256
+  // ratio of  o_sclk/o_mclk is 64
+  // o_sdin must be stable on posedge o_sclk.
   
 // sequential
 
@@ -57,7 +54,5 @@ module i2s(i_sample, clk, reset, o_mclk, o_lrclk, o_sdin, o_sclk);
 			  resetn <= 1;
 		end
   end
-
-	  
   
 endmodule // i2s
