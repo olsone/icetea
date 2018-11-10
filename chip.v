@@ -23,7 +23,7 @@ module chip (
     input  BWE,
     input  BCRUCLK,
     input  BDBIN,
-    output BDBDIR,
+    output DBDIR,
     output SHLD,
     input  ADRIN2,
     output EN_CRUIN,
@@ -34,7 +34,7 @@ module chip (
     // All PMOD outputs, with holes
     output [23:0]  PMOD,
     output [7:0]   BDB,
-    output [7:0]   PMODC,
+    output [7:0]   PMODC, // PMOD13, PMOD14/SPI/LEDs
     input B1,
     input B2
   );
@@ -45,16 +45,17 @@ module chip (
 
   // Set unused pmod pins to default
   assign PMOD[15:0] = {16{1'bz}};
-  assign PMODC[3:0] = {4{1'bz}};
+  //assign PMOD[23:20] = {4{1'bz}}; // PMOD5
+  assign PMODC[3:0] = {4{1'bz}}; // PMOD13
   
   // CRU not implemented
   assign EN_CRUIN = 1'b1;
   
   // only the databus is bidirectional
-  reg        BDBDIR;
-  reg  [7:0] bdb_out;
+  wire        DBDIR;
+  wire  [7:0] bdb_out;
   wire [7:0] bdb_in;
-  reg        SHLD;
+  wire        SHLD;
 
   // Two way data pins
   SB_IO #(
@@ -62,7 +63,7 @@ module chip (
     .PULLUP(1'b 0)
   ) ios [7:0] (
     .PACKAGE_PIN(BDB[7:0]),
-    .OUTPUT_ENABLE(BDBDIR),
+    .OUTPUT_ENABLE(!DBDIR), // DBDIR=0 output DBDIR=1 input (safe)
     .D_OUT_0(bdb_out),
     .D_IN_0(bdb_in)
   );
@@ -101,25 +102,26 @@ module chip (
   
   wire [7:0] data_bus;      // copy of whats on the data bus from memory_interface
   wire [15:0] address_bus;  // decoded address from memory cycle
+  wire [2:0] mem_state;
   
   memory_interface mem(
     .reset(greset),
     .clk(clk),
     // Host control lines and memory bus
     .phi3(BPHI3), 
-    .data_bus_in(bdb_in),
-    .data_bus_out(bdb_out),
-    .address_bus(address_bus),
-    .data_bus(data_bus),
+    .i_data_bus(bdb_in),
+    .o_data_bus(bdb_out),
+    .o_address_bus(address_bus),
+//    .o_internal_data_bus(data_bus),
     .memen(BMEMEN), 
     .dbin(BDBIN), 
     .we(BWE),
     .a15(BCRUOUT),
-    .dbdir(BDBDIR),
-    .rdbena(RDBENA),
+    .o_dbdir(DBDIR),
+    .o_rdbena(RDBENA),
     // Serial interface for address bus
-    .shld(SHLD), 
-    .serclk(SRCLK), 
+    .o_shld(SHLD), 
+    .o_serclk(SRCLK), 
     .adrin1(ADRIN1), 
     .adrin2(ADRIN2),
     // SRAM pins
@@ -130,44 +132,61 @@ module chip (
     .RAMOE(RAMOE),                     // output enable - low to enable
     .RAMWE(RAMWE),                     // write enable - low to enable
     .RAMCS(RAMCS),                      // chip select - low to enable
+    // debugging
+    .state(mem_state)
   );  
   
-  //wire en_sound1 = (address_bus[15:8] != 8'h84); // active low
-  wire en_sound1 = 1'b1;
-  wire we_sound = 1'b1; // BWE
+  wire en_sound1 = (address_bus[15:8] != 8'h84); // active low. || !a15
+  //wire en_sound1 = 0'b1;
+  wire we_sound = BWE;
   wire [7:0] snd_bus = 8'h00;
   
-  wire [7:0] sound_sample;
+  wire [15:0] sound_sample;
   wire [3:0] sndbits;
   
   sn76489 sound1(
     .clk(clk),
     .reset(greset),
     .sndclk(sndclk),
+    .sndclk32(i2sclk),
     .i_data_bus(snd_bus),
-    .cs(en_sound1),
-    .we(we_sound),
+    .i_cs(en_sound1),
+    .i_we(we_sound),
     .o_sample(sound_sample),
     .o_bits(sndbits)   
   );
 
-  assign PMOD[16] = 0; // sndbits[0];
-  assign PMOD[17] = 0; // sndbits[1];
-  assign PMOD[18] = 0; // sndbits[2];
-  assign PMOD[19] = sndbits[3];
+  wire mclk, lrclk, sdin, sclk;
+
   
-//  wire mclk, lrclk, sdin, sclk; // to   
   i2s snd_dac(
 		.i_sample(sound_sample),
 		.clk(i2sclk), // 28.576 MHz is in between recommended 24.576 or 32.768 (96 kHz or 128kHz Fs)
 		.reset(greset), 
 		// outputs
-		.o_mclk (PMOD[20]), 
-		.o_lrclk(PMOD[21]), 
-		.o_sdin (PMOD[22]),
-		.o_sclk (PMOD[23])
+		.o_mclk (mclk), 
+		.o_lrclk(lrclk), 
+		.o_sclk (sclk),
+		.o_sdin (sdin)
 	);
-
+/* 
+  i2s connected to PMOD13
+  assign PMODC[0] = mclk;
+  assign PMODC[1] = lrclk;
+  assign PMODC[2] = sdin;
+  assign PMODC[3] = sclk;
+ */
+  
+  // PMOD5/6
+  assign PMOD[16] = mem_state[2];
+  assign PMOD[17] = mem_state[1];
+  assign PMOD[18] = mem_state[0];
+  assign PMOD[19] = SHLD;
+  // pmod6  
+  assign PMOD[20] = mclk;
+  assign PMOD[21] = lrclk;
+  assign PMOD[22] = sclk;
+  assign PMOD[23] = sdin;  
 
 
 endmodule

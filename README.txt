@@ -57,6 +57,9 @@ FILTER_RANGE: 1 (3'b001)
 
 Pin assignments in icetea.pcf are customized from blaceice-ii.pcf
 
+Using PMOD7-12 to connect to the IceTea board
+Using PMOD6 to connect to PMOD I2S
+
 ========================
 
 Structure
@@ -64,7 +67,8 @@ Structure
 chip.v 
 \____pll_ntsc.v
 \____memory_interface.v ==/== SRAM
-\____
+\____sn76489 
+     \____i2s
 
 
 
@@ -80,4 +84,28 @@ ERROR: Mismatch in directionality for cell port chip.dig_snd_out.mclk: \PMOD [20
 caused by assigning Z to it somewhere:
   assign PMOD[20:0] = {20{1'bz}};
 
+Warning: Driver-driver conflict for \dig_snd_out.value [7] between cell $techmap\dig_snd_out.$procdff$1731.Q and constant 1'0 in chip: Resolved using constant.
+caused by assigning value=0 in akways(reset) and in always(negedge clk)
 
+shift_ctrl.v:17: Warning: Identifier `\count_n' is implicitly declared.
+
+this might be why shift_reset toggles.
+ assign count_n = count + 1; always made shift_reset oscillate.
+ 
+===================
+
+Helpful tools
+
+play many loops of a 1-cycle sample:
+
+sox AKWF_symetric/AKWF_symetric_0001.wav -d repeat 180
+
+Like
+AKWF_piano/AKWF_piano_0001.wav
+AKWF_bw_saw/AKWF_saw_0002.wav
+
+sox AKWF_cello/AKWF_cello_0003.wav -d repeat 100 tremolo 6
+
+sox AKWF_violin/AKWF_violin_0005.wav -d repeat 100 
+
+dumpwav ~/Downloads/AKWF_violin/AKWF_violin_0005.wav > waves/wave_violin.mem

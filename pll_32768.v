@@ -6,8 +6,8 @@
  * Use at your own risk.
  *
  * Given input frequency:       100.000 MHz
- * Requested output frequency:   24.576 MHz
- * Achieved output frequency:    24.554 MHz
+ * Requested output frequency:   32.768 MHz
+ * Achieved output frequency:    32.812 MHz
  */
 
 module pll_32768(
@@ -17,6 +17,8 @@ module pll_32768(
 	output i2sclock_out,
 	output locked
 	);
+
+wire clock_out;
 
 SB_PLL40_CORE #(
 		.FEEDBACK_PATH("SIMPLE"),

@@ -3,24 +3,24 @@ module memory_interface(
     input wire reset,
     input wire clk,
     input wire phi3, 
-    input  wire [7:0] data_bus_in,
-    output wire [7:0] data_bus_out,
-    output reg [15:0] address_bus, // decoded cpu address bus
-    output reg [7:0] data_bus,    // synchronized data bus in, for peripherals
+    input  wire [7:0] i_data_bus,
+    output wire [7:0] o_data_bus,
+    output reg [15:0] o_address_bus, // decoded cpu address bus
+//    output reg [7:0]  o_internal_data_bus,    // synchronized data bus in, for peripherals
     input wire memen, 
     input wire dbin, 
     input wire we,
     input wire a15,
-    output wire dbdir,
-    output reg rdbena,
+    output wire o_dbdir,
+    output wire o_rdbena,
     // Serial interface for address bus
-    output wire shld, 
-    output wire serclk, 
+    output wire o_shld, 
+    output wire o_serclk, 
     input wire adrin1, 
     input wire adrin2, 
     // test bench monitoring only
-    output [2:0] state, 
-    output memory_cycle_begin,
+    output reg [2:0] state, 
+    output wire memory_cycle_begin,
 
     // SRAM pins
     output wire sram_data_out_en,       // when to switch between in and out on data pins
@@ -92,17 +92,15 @@ module memory_interface(
   //   wait required?
 
 
-  reg   memory_cycle_begin;
-
 /////////////////////////////////////////////////////////////
 // Sequential logic
 /////////////////////////////////////////////////////////////
 
-  always @(posedge clk or posedge reset) begin
+  always @(posedge clk, posedge reset) begin
    if (reset)
-     state = STATE_IDLE;
+     state <= STATE_IDLE;
    else
-     state = nx_state;
+     state <= nx_state;
   end
 
 /////////////////////////////////////////////////////////////
@@ -119,39 +117,33 @@ module memory_interface(
 //      memory_cycle_begin = 0;
 //  end
   
-      
+  assign shift_reset = !(state == STATE_IDLE); // stay in reset (active low) during idle
+  assign memory_cycle_begin = (state == STATE_OBTAIN_ADDRESS);
+ 
+/////////////////////////////////////////////////////////////
   // next state logic
+/////////////////////////////////////////////////////////////
   
-  always @(posedge clk) begin
-// don't really need this
-//    if (memen) begin
-//			nx_state <= STATE_IDLE;
-//    end
-//    else
-    
-    nx_state = state; // default
-    case (state)
+  always @(*)
+  case (state)
     // Idle state. an address read can begin on any negedge(phi3)
     STATE_IDLE : 
     begin
-      // formerly in the initial block:
 			bank_sel <= 4'b0000;
 			chip_select <= 0;
 			write_enable <= 0;
 			output_enable <= 0;        
-			rdbena <= 1; // negative logic
-			address_bus <= 16'b0;
+			o_address_bus <= 16'b0;
       external_addr <= 18'hxxxx;
 			
-      // obtain address even if memen high, for cru cycle.
-      if (!phi3) begin
-        nx_state = STATE_OBTAIN_ADDRESS;
-        shift_reset <= 0; // let it run
+      // (TODO: obtain address even if memen high, for cru cycle.)
+      // ignore cru cycle for now:
+      // come out of idle on low memen, low phi3
+      if (!phi3 && !memen) begin
+        nx_state <= STATE_OBTAIN_ADDRESS;
         data_read_reg <= 16'hxxxx;
-      end else
-  			shift_reset <= 1;
-      begin
-      end
+      end else         
+        nx_state = STATE_IDLE; // default
       
     end      
     // Reading Address from shift registers
@@ -160,16 +152,17 @@ module memory_interface(
         // TODO: unscramble address bits
         // 15 : A9 A2 A6 A1,    11 : A0 A15 A7 A8
         //  7 : A5 A4 A12 A14,   3 : A13 A3 A11 A10
-        //address_bus = {addr_reg[11], addr_reg[12], addr_reg[14], addr_reg[2], addr_reg[6], addr_reg[7], addr_reg[13], addr_reg[9], 
-        //               addr_reg[8], addr_reg[15], addr_reg[0], addr_reg[1], addr_reg[5], addr_reg[3], addr_reg[4], 1'b0 };
-        address_bus <= addr_reg;
-        memory_cycle_begin <= 0;
+        o_address_bus <= {addr_reg[11], addr_reg[12], addr_reg[14], addr_reg[2], addr_reg[6], addr_reg[7], addr_reg[13], addr_reg[9], 
+                       addr_reg[8], addr_reg[15], addr_reg[0], addr_reg[1], addr_reg[5], addr_reg[3], addr_reg[4], 1'b0 };
+        //o_address_bus <= addr_reg;
         bank_sel <= addr_reg[15:12];
-        if (!memen)  
-          nx_state = STATE_DECODE_ADDRESS;
+        if (!memen)  // ie not a cru cycle
+          nx_state <= STATE_DECODE_ADDRESS;
         else
-          nx_state = STATE_IDLE;        
+          nx_state <= STATE_IDLE;       
       end
+      else
+        nx_state = STATE_OBTAIN_ADDRESS; // default
 
     STATE_DECODE_ADDRESS : 
       begin
@@ -177,7 +170,6 @@ module memory_interface(
           if (bank_mapped) begin
             chip_select   <= 1; // positive logic
             output_enable <= dbin; // positive logic
-            rdbena <= 0; // negative logic
             // TODO: read only banks
             write_enable <= !dbin && !bank_readonly; // positive logic
             // if bank_readonly, the write will still appear on the data pins out, but SRAM will not be enabled to accept it.
@@ -192,61 +184,72 @@ module memory_interface(
     STATE_READ_MEM : begin
       // fetch word from SRAM
       data_read_reg <= sram_data_in;
-      nx_state = STATE_READ_IO;
+      // TODO: wait states?
+      nx_state = STATE_IDLE;
       end
     STATE_READ_IO: begin
       // unfinished
-      // TODO: wait states?
+      data_read_reg <= 8'h55;
       nx_state = STATE_IDLE;
       end
     
     STATE_WRITE_MEM:
-      if (we) begin
+      if (!we) begin
         if (a15) 
-          data_write_reg[7:0] <= data_bus_in;
+          data_write_reg[7:0] <= i_data_bus;
         else 
-          data_write_reg[15:8] <= data_bus_in; // when is databus stable? do we need a condition using phi3?
+          data_write_reg[15:8] <= i_data_bus; // when is databus stable? do we need a condition using phi3?
         
-        if (!a15) 
-          nx_state = STATE_WRITE_IO;
+        if (!a15) begin
+          nx_state = STATE_IDLE;
+          write_enable <= 0;
+        end else
+          nx_state = STATE_WRITE_MEM;
+        // TODO: wait states?
         
       end
     STATE_WRITE_IO: begin
-        write_enable = 0;
         nx_state = STATE_IDLE;
       end
+    default:
+      nx_state = STATE_IDLE;
+  endcase
 
-    endcase
-//    end // if !memen
-  end
+  
 
   // SRAM interface
-    assign sram_data_out_en = (state == STATE_WRITE_MEM || state == STATE_WRITE_IO); // positive logic. turn on output pins when writing data
-    assign address_pins = external_addr;
-    assign sram_data_out = data_write_reg;
-    
-    assign dbdir = memen || !dbin;   // 1=reads 4A bus 0=drives 4A bus
-    // dbdir must be correct when rdbena=0 (active low, connected to databus)
-    
-    assign RAMOE = !output_enable;
-    assign RAMWE = !write_enable;
-    assign RAMCS = !chip_select;
+	assign sram_data_out_en = (state == STATE_WRITE_MEM || state == STATE_WRITE_IO); // positive logic. turn on output pins when writing data
+	assign address_pins = external_addr;
+	assign sram_data_out = data_write_reg;
+
+	// LVC245A data bus buffer
+	// o_dbdir must only be 0 if one of our addresses is being read, in a memory read cycle.
+	//
+	// For now, force it to 1 to be safe.
+	// dbin=1 indicates the 9900 is accepting input.
+	assign o_dbdir = 1'b1 || memen || !dbin;   // 1=reads 4A bus 0=drives 4A bus
+	// o_dbdir must be correct when o_rdbena=0
+	assign o_rdbena = 0; // LVC245A output enable*
+
+	assign RAMOE = !output_enable; 
+	assign RAMWE = !write_enable;
+	assign RAMCS = !chip_select;
 
   // host interface
-  // sram to data_bus:
-  assign data_bus_out = (!memen && dbin && bank_mapped) ? (!a15 ? data_read_reg[15:8] : data_read_reg[7:0]) : 16'hzzzz; 
+  // sram to o_internal_data_bus:
+  assign o_data_bus = (!memen && dbin && bank_mapped) ? (!a15 ? data_read_reg[15:8] : data_read_reg[7:0]) : 16'hzzzz; 
  
   // memory mapped devices (FORTi card)
-  assign mm_enable = !memen && address_bus[15:10] == 3'b100;
+  assign mm_enable = !memen && o_address_bus[15:10] == 6'b100001; // 8400 - 87ff
 
 
   wire [4:0] count;
-  reg shift_reset;
+  wire shift_reset;
   wire addr_reg_done;
-  
-  shift_ctrl ctrl1 (.reset(shift_reset), .clk(clk), .shld(shld), .serclk(serclk), .count(count), .done(addr_reg_done));
-  shift_ser_in ser1 (adrin1, shld, serclk, addr_reg[15:8]);
-  shift_ser_in ser2 (adrin2, shld, serclk, addr_reg[7:0]);
+  // shift_reset is negative logic
+  shift_ctrl ctrl1 (.reset(shift_reset), .clk(clk), .o_shld(o_shld), .o_serclk(o_serclk), .count(count), .o_done(addr_reg_done));
+  shift_ser_in ser1 (.i_q(adrin1), .i_reset(o_shld), .i_serclk(o_serclk), .o_data(addr_reg[15:8]));
+  shift_ser_in ser2 (.i_q(adrin2), .i_reset(o_shld), .i_serclk(o_serclk), .o_data(addr_reg[7:0]));
   
   
   

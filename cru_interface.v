@@ -1,32 +1,46 @@
 /*  cru_interface implements the paging in and out of DSR roms and SAMS memory, and potentially more.
 
-  In a 9900 computer architecture, CRU "communications register unit 9901" is a separate interface bus between
+  In a 9900 computer architecture, CRU "communications register unit" is a separate interface bus between
   the 9900 and 9901 (programmable systems interface) and external peripherals. It uses 
-  the A0-A14 address bus and transfers 1-bit serial data over CRUIN, CRUOUT(A15), CRUCLK.
+  the A0-A14 address bus and transfers 1-bit serial data over CRUIN, CRUOUT(A15) gated by CRUCLK.
 
   CRU instructions in the 9900 are: 
     SBO d     set bit one
     SBZ d     set bit zero
-    TB  d     test bit
-    LDCR s,n  load n cru bits into cru from s
-    STCR s,n  store n cru bits from cru into s
+    TB  d     test bit (read one bit from cru)
+    LDCR s,n  load n cru bits into cru from s (set multiple bits/write to cru)
+    STCR s,n  store n cru bits from cru into s (read multiple bits from cru)
   CRU instructions use R12 as the base address (only bits A0-A14)
   For single bit intructioms, the CRU adress is R12 (A0-A14) + d (signed)
    
-  Peripherals on the expansion bus each have a CRU base address from $1000 to $1f00, and respond to CRU instructions.
+  Peripherals on the expansion bus each have a CRU base address from $1000 to $1f00, and 
+  respond to CRU instructions.
   Each peripheral can have 128 bits of address space.
-  Their DSR ROMs are paged in at $4000 by setting a 1 at their CRU base address. 
+  Their DSR ROMs are paged in at $4000 by setting a 1 at their CRU base address.
+  A device scan pages in each one at a time.
+  
+  It is customary to enable this bit even if the rom is not used, 
+  so that a led will show device activity. For instance direct RS232 access has no
+  need of the rom, but blinking the led is desirable.
+
+  Peripherals have other registers mapped into their CRU address space. For instance the 
+  RS232 has UART registers.
+
+  They may have registers in the CPU address space as well. Disk controller has WD1771
+  IO registers, SAMS has LS612 memory mapper registers.
+  
   Some known peripherals:
    >1000 HFDC, WDS, HRD, any storage device taking priority over FDCC
    >1100 FDCC Floppy Disk Controller
    >1300 RS232
   
     LD R12,>1300
-    SBO 0    page in the rs232 DSR ROM at >4000. It is customary to enable this even for direct RS232 access.
+    SBO 0    page in the rs232 DSR ROM at >4000. 
+    TB  7    test for some bit
+    JEQ YES
     SBZ 0    page out
+    ...
      
-  Peripherals have other registers in their CRU address space. For instance the RS232 has UART registers.
-  They may have registers in the CPU address space as well.
 */
 
 module cru_interface(
@@ -51,7 +65,8 @@ module cru_interface(
   // http://www.unige.ch/medecine/nouspikel/ti99/superams.htm
   // which is based on the 74LS612 memory mapper.
   // SuperAMS uses the upper 4 bits of the address, but responds only at $2000,$3000, and $a000-$f000.
-  // to allow paging of 4k at $5000 or $7000 (or anywhere else).
+  // I will allow paging of 4k at $5000 or $7000 (or anywhere else), as there is one 512K memory
+  // used for dsr roms, cartridge rom, and ram.
   //
   // SuperAMS has two cru bits:
   // bit0 - cardsel
@@ -78,22 +93,24 @@ module cru_interface(
     sams_transparent = 0; // use default memory map
     cru_cardsel = 16'h0000; // all cards off. only one at a time should ever be enabled!
     
-    // iceTea uses the SRAM as follows: 
+    // iceTea uses the SRAM as follows (the first 64k is very like a basic 4A): 
     // 4k page number, use
+    // ---------------------
     // 00 reserved (bug catcher) 
     // 02 low ram
     // 04 icetea main dsr rom 
     // 06 cartridge rom
     // 08 reserved
     // 0a high ram
-    // 0c "
-    // 0e "
+    // 0c high ram
+    // 0e high ram
     // 10 superams ram 
     // 7f " 
+    //
     // other needs: 
     // SD buffer (reduce demand on BRAM)
-    // how does forth use the sram? can it map into the J1? can the J1 only access it through an I/O port.
-        
+    // how does J1 access the sram? can the J1 only access it through an I/O port.
+    
     
     {bank_flags[0],  bank_flags[1]}  = {2'b00, 2'b00}; // $0000 console rom
     {bank_flags[2],  bank_flags[3]}  = {2'b10, 2'b10}; // $2000 low ram

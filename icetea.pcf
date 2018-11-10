@@ -47,51 +47,51 @@ set_io PMOD[18] 112 #c9
 set_io PMOD[19] 107 #c7
 
 #pmod 6 GPIO
-# dig_snd_out lines
+# i2s 
 set_io PMOD[20] 144 #G1
 set_io PMOD[21] 113 #C10
 set_io PMOD[22] 110 #C8
 set_io PMOD[23] 106 #C6
 
 #pmod 7 lvds pairs 2 & 5
-set_io BDB[2] 10 # 5b   bd2     io
-set_io BDB[0] 9 # 5a    bd0     io
-set_io BDB[5] 2 # 2b    bd5     io
-set_io BDB[6] 1 # 2a    bd6     io
+set_io RDBENA   10 # 5b    o
+set_io ADRIN1    9 # 5a    o
+set_io SRCLK     2 # 2b    i
+set_io BCRUIN    1 # 2a  o
 
 #pmod 8 lvds pairs 3 & 4
-set_io BDB[3] 8 # 4b    bd3     io
-set_io BDB[1] 7 # 4a    bd1     io
-set_io BDB[4] 4 # 3b    bd4     io
-set_io BDB[7] 3 # 3a    bd7     io
+set_io DBDIR     8 # 4b    o
+set_io SHLD      7 # 4a    i
+set_io ADRIN2    4 # 3b    o
+set_io EN_CRUIN  3 # 3a    o
 
 #pmod 9 lvds pairs 10 & 13
-set_io BMEMEN   20 # 13b  bmemen   i
-set_io BPHI3    19 # 13a  bphi3    i
-set_io BCRUOUT  16 # 10b  a15/cruout   i
-set_io BRESET   15 # 10a  breset   i
+set_io BIAQ     20 # 13b  bmemen   i
+set_io BWE      19 # 13a  bphi3    i
+set_io BCRUCLK  16 # 10b  a15/cruout   i
+set_io BDBIN    15 # 10a  breset   i
 
 #pmod 10 lvds pairs 8 & 12
-set_io BIAQ     18 # 12b  biaq     i
-set_io BWE      17 # 12a  bwe      i
-set_io BCRUCLK  12 # 8b   bcruclk  i
-set_io BDBIN    11 # 8a   bdbin    i
+set_io BMEMEN   18 # 12b  biaq     i
+set_io BPHI3    17 # 12a  bwe      i
+set_io BCRUOUT  12 # 8b   bcruclk  i
+set_io BRESET   11 # 8a   bdbin    i
 
 
 #pmod 11 lvds pairs 14 & 25
-set_io BDBDIR   34 # 25b  dbdir    o 
-set_io SHLD     33 # 25a  shld     o
-set_io ADRIN2   22 # 14B  adrin2   i 
-set_io EN_CRUIN 21 # 14a  en_cruin o  
+set_io BDB[2]   34 # 25b  io 
+set_io BDB[0]   33 # 25a  io
+set_io BDB[5]   22 # 14B  io 
+set_io BDB[6]   21 # 14a  io  
 
 #pmod 12 lvds pairs 18 & 24
-set_io RDBENA   32 # 24b  rdbena  o
-set_io ADRIN1   31 # 24a  adrin1  i
-set_io SRCLK    26 # 18b  srclk   o
-set_io BCRUIN   25 # 18a  bcruin  o
+set_io BDB[3]   32 # 24b  io
+set_io BDB[1]   31 # 24a  io
+set_io BDB[4]   26 # 18b  io
+set_io BDB[7]   25 # 18a  io 
 
 #pmod 13 DIG16-DIG19
-
+# i2s didn't work out here. were all the switches grounded?
 set_io PMODC[0] 37  # DIG19
 set_io PMODC[1] 38  # DIG18
 set_io PMODC[2] 39  # DIG17

@@ -10,7 +10,7 @@ module i2s(i_sample, clk, reset, o_mclk, o_lrclk, o_sdin, o_sclk);
 // no action required: device outputs 0 for first 2000 samples.
 // Feed 0 data for 10 samples while changing o_lrclk ratio.
 
-  parameter WIDTH = 8;
+  parameter WIDTH = 16;
 
   input [WIDTH-1 : 0] i_sample;
   input  wire clk, reset;
