@@ -147,9 +147,15 @@ module memory_interface(
       
     end      
     // Reading Address from shift registers
+    // Address lines to LV165A were routed to minimize vias. Reorder bits in fpga.
+    //  11  12  13  14   3   4   5   6  LV165A pin
+    //   A   B   C   D   E   F   G   H  <- H is the first bit obtained by shifting
+    //  A8  A7 A15  A0  A1  A6  A2  A9  <- ADRIN1
+    // A10 A11  A3 A13 A14 A12  A4  A5  <- ADRIN2
+     
     STATE_OBTAIN_ADDRESS : 
       if (addr_reg_done) begin
-        // TODO: unscramble address bits
+        // unscramble address bits
         // 15 : A9 A2 A6 A1,    11 : A0 A15 A7 A8
         //  7 : A5 A4 A12 A14,   3 : A13 A3 A11 A10
         o_address_bus <= {addr_reg[11], addr_reg[12], addr_reg[14], addr_reg[2], addr_reg[6], addr_reg[7], addr_reg[13], addr_reg[9], 
@@ -158,7 +164,7 @@ module memory_interface(
         bank_sel <= addr_reg[15:12];
         if (!memen)  // ie not a cru cycle
           nx_state <= STATE_DECODE_ADDRESS;
-        else
+        else  // cru cycle
           nx_state <= STATE_IDLE;       
       end
       else
@@ -166,6 +172,7 @@ module memory_interface(
 
     STATE_DECODE_ADDRESS : 
       begin
+/* 
           external_addr <= {bank_address[6:0], addr_reg[11:1]};
           if (bank_mapped) begin
             chip_select   <= 1; // positive logic
@@ -180,6 +187,12 @@ module memory_interface(
             
             nx_state  = dbin ? STATE_READ_IO : STATE_WRITE_IO;
           end
+ */
+          external_addr <= {bank_address[6:0], addr_reg[11:1]};
+					chip_select   <= 1; // positive logic
+					output_enable <= dbin; // positive logic
+					nx_state  = dbin ? STATE_READ_MEM : STATE_WRITE_MEM;
+ 
         end    
     STATE_READ_MEM : begin
       // fetch word from SRAM
@@ -193,20 +206,20 @@ module memory_interface(
       nx_state = STATE_IDLE;
       end
     
-    STATE_WRITE_MEM:
-      if (!we) begin
-        if (a15) 
-          data_write_reg[7:0] <= i_data_bus;
-        else 
-          data_write_reg[15:8] <= i_data_bus; // when is databus stable? do we need a condition using phi3?
-        
-        if (!a15) begin
-          nx_state = STATE_IDLE;
-          write_enable <= 0;
-        end else
-          nx_state = STATE_WRITE_MEM;
-        // TODO: wait states?
-        
+    STATE_WRITE_MEM: begin
+			if (a15) 
+				data_write_reg[7:0] <= i_data_bus;
+			else begin
+				data_write_reg[15:8] <= i_data_bus; // when is databus stable? do we need a condition using phi3? 
+      end
+      write_enable <= !we; // this will write twice, clobbering high byte on the first time through
+      
+        // wait states? just loop here.
+      if (!memen)
+        nx_state = STATE_WRITE_MEM;
+      else
+        nx_state = STATE_IDLE; // we was released  
+      
       end
     STATE_WRITE_IO: begin
         nx_state = STATE_IDLE;

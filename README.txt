@@ -91,7 +91,10 @@ shift_ctrl.v:17: Warning: Identifier `\count_n' is implicitly declared.
 
 this might be why shift_reset toggles.
  assign count_n = count + 1; always made shift_reset oscillate.
- 
+
+
+Shift Registers. Did'nt work consistently until I halved the clock rate to 25 MHz.
+It now takes 300 ns to decode the address.
 ===================
 
 Helpful tools

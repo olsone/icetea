@@ -25,10 +25,7 @@ module sn76489(
   // period registers
   reg [9:0] counter[3:0];
   reg [3:0] bits;
-  // wavetable synthesizer
-  reg [9:0] wt_counter[3:0];
-  reg [5:0] wt_idx[3:0];
-    
+   
   wire noise_bit;
   wire noise_clk = bits[3];
   wire noise_type = tone[3][2]; // periodic or white noise
@@ -68,10 +65,12 @@ module sn76489(
   
   always @(posedge clk) begin 
     if (reset || !resetn) begin
+ 
       tone[0] <= 10'h1ac;
       tone[1] <= 10'h153;
       tone[2] <= 10'h10d;
       tone[3] <= 10'h005;
+ 
       volume[0] <= 4'h0;
       volume[1] <= 4'h0;
       volume[2] <= 4'h0;
@@ -106,26 +105,30 @@ module sn76489(
 //
 // wavetable synthesizer
 //
-  // wavetables
+  // wavetable synthesizer
+  reg [9:0] wt_counter[3:0];
+  reg [5:0] wt_idx[3:0];
+  reg [9:0] wt_tone[4]; // noise is tone[3]
+       // wavetables
   reg [WIDTH-1:0] wave_table1[0:63] ;
   reg [WIDTH-1:0] wave_table2[0:63] ;
   reg [WIDTH-1:0] wave_table3[0:63] ;
   reg [WIDTH-1:0] wave_table0[0:63] ;
-  parameter NSAMP = 5;
-  reg [WIDTH-1:0] wave_tables[NSAMP-1:0][0:63];
-  reg [1:0] wave_number[3:0];
+  parameter NSAMP = 8;
+  reg [WIDTH-1:0] wave_tables[64];
+  reg [2:0] wt_number[3:0];
   
   initial  begin
     $readmemh("waves/wave_square.mem", wave_table0);
-    $readmemh("waves/wave_sine.mem",   wave_table1);
+    $readmemh("waves/wave_violin.mem",   wave_table1);
     $readmemh("waves/wave_saw.mem",    wave_table2);
     $readmemh("waves/wave_violin.mem", wave_table3);
 
-    $readmemh("waves/wave_square.mem", wave_tables[0][0:63] );
-    $readmemh("waves/wave_sine.mem",   wave_tables[1][0:63] );
-    $readmemh("waves/wave_saw.mem",    wave_tables[2][0:63] );
-    $readmemh("waves/wave_cello.mem",  wave_tables[3][0:63] );
-    $readmemh("waves/wave_violin.mem", wave_tables[4][0:63] );
+    $readmemh("waves/wave_square.mem", wave_tables, 9'd0,  9'd63 );
+    $readmemh("waves/wave_sine.mem",   wave_tables,  64, 127 );
+    $readmemh("waves/wave_saw.mem",    wave_tables, 128, 191 );
+    $readmemh("waves/wave_cello.mem",  wave_tables, 192, 255 );
+    $readmemh("waves/wave_violin.mem", wave_tables, 256, 319 );
   end
   // TODO: implement wave tables for sine, triangle, sawtooth, custom
 
@@ -141,15 +144,20 @@ module sn76489(
       wt_idx[1] <= 6'd0;
       wt_idx[2] <= 6'd0;
       wt_idx[3] <= 6'd0;
-      wave_number[0] <= 0;
-      wave_number[1] <= 0;
-      wave_number[2] <= 0;
-      wave_number[3] <= 0;
-    end else begin
+      wt_number[0] <= 0;
+      wt_number[1] <= 0;
+      wt_number[2] <= 0;
+      wt_number[3] <= 0;
+    
+      wt_tone[0] <= 10'h1ac;
+      wt_tone[1] <= 10'h153;
+      wt_tone[2] <= 10'h11d;
+ 
+     end else begin
 			if (wt_counter[0] == 10'b0) 
 			begin
         wt_idx[0] = wt_idx[0] + 1;
-				wt_counter[0] =   10'h1ac; // tone[0]; //  
+				wt_counter[0] =  wt_tone[0]; // 10'h1ac; //  
 			end else begin
 				wt_counter[0] = wt_counter[0] - 1;
 			end
@@ -157,7 +165,7 @@ module sn76489(
 			if (wt_counter[1] == 10'b0) 
 			begin
         wt_idx[1] = wt_idx[1] + 1;
-				wt_counter[1] = tone[1];
+				wt_counter[1] = wt_tone[1];
 			end else begin
 				wt_counter[1] = wt_counter[1] - 1;
 			end
@@ -165,7 +173,7 @@ module sn76489(
 			if (wt_counter[2] == 10'b0) 
 			begin
         wt_idx[2] = wt_idx[2] + 1;
-				wt_counter[2] = tone[2]; //  10'h10d;
+				wt_counter[2] = wt_tone[2]; //  10'h10d;
 			end else begin
 				wt_counter[2] = wt_counter[2] - 1;
 			end
@@ -186,9 +194,11 @@ module sn76489(
 	if (resetn) begin
 
 		case (mixer_i)
-		0: accum =       {2'b00,  wave_table1 [ wt_idx[0] ] };
-//		1: accum = accum + wave_table3 [ wt_idx[1] ];
-//		2: accum = accum + wave_table3 [ wt_idx[2] ];
+		0: accum =         wave_table1 [ wt_idx[0] ];
+		
+//		  {2'b00,  wave_table1[ {wt_number[0], wt_idx[0]} ] };
+//		1: accum = accum + wave_table1 [ wt_idx[1] ];
+//		2: accum = accum + wave_table1 [ wt_idx[2] ];
 		3: mixer = accum[WIDTH-1:0];
 
 		endcase

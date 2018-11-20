@@ -8,7 +8,8 @@ VERILOG_FILES = \
 	sn76489.v \
 	i2s.v \
 	memory_interface.v  \
-	cru_interface.v
+	cru_interface.v \
+	addr_leds.v
 
 ROM_FILES = \
 	waves/wave_sine.mem \

@@ -4,17 +4,17 @@ module shift_ctrl(reset, clk, o_shld, o_serclk, count, o_done);
   
   input     reset, clk;
   output    o_shld, o_serclk, o_done;
-  output [4:0]  count;
+  output reg [5:0]  count;
   
   wire      reset, clk;
   wire      o_shld, o_serclk, o_done;
 
-  reg [4:0] count;
-  reg [4:0] count_n;
+  reg  [5:0] count;
+  wire [5:0] count_n;
   
-  assign o_shld = !(count == 5'b00000);
-  assign o_serclk = o_shld && !count[0];
-  assign o_done = count[4];
+  assign o_shld = !(count[5:1] == 5'b00001);
+  assign o_serclk = !count[1] || (count[5:1] == 5'b00001);
+  assign o_done = count[5] && count[2];
   assign count_n = count + 1;
   
   always @(posedge clk)
@@ -27,15 +27,22 @@ module shift_ctrl(reset, clk, o_shld, o_serclk, count, o_done);
 endmodule // shift_ctrl
 
 /*
-# state shld serclk 
-0 load   0    0
-1 out    1    0 
-2 shift  1    1
-3 out    1    0
-4 shift  1    1
+LV165 shifts on rising edge of serclk. so, sample q on falling serclk.
+  timing:
+   6 ns  CLK pulse duration min
+   8 ns SHLD low 
+   5 ns SHLD high before CLK rise
+   8 ns Data before SHLD high
+
+# reset shld serclk
+0  0     1    1
+1  1     0    1  load
+2  1     1    1  wait
+3  1     1    0  out H
+4  1     1    1  shift
 ...
-15 out   1    0
-16 done  x    x
+17 1     1    0  out A
+18 1     1    1  done
 
 
 */

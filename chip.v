@@ -94,11 +94,19 @@ module chip (
     .i2sclock_out(i2sclk)
   );
   
+  // check for expected address_bus	
+  addr_leds my_leds(
+    .address(address_bus),
+    .leds (PMODC[7:4]), // red, yellow, green, blue
+  );
+        
+/* 
   blink my_blink (
     .clk  (vdpclk),
     .rst  (greset),
     .leds (PMODC[7:4]), // red, yellow, green, blue
   );
+ */
   
   wire [7:0] data_bus;      // copy of whats on the data bus from memory_interface
   wire [15:0] address_bus;  // decoded address from memory cycle
@@ -183,10 +191,15 @@ module chip (
   assign PMOD[18] = mem_state[0];
   assign PMOD[19] = SHLD;
   // pmod6  
+/* 
   assign PMOD[20] = mclk;
   assign PMOD[21] = lrclk;
   assign PMOD[22] = sclk;
   assign PMOD[23] = sdin;  
-
+ */
+  assign PMOD[20] = address_bus[15];
+  assign PMOD[21] = address_bus[14];
+  assign PMOD[22] = address_bus[13];
+  assign PMOD[23] = address_bus[12]; 
 
 endmodule
