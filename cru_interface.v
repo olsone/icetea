@@ -45,18 +45,20 @@
 
 module cru_interface(
   input wire clk,
-  input wire cruclk,
-  input wire memen,
+  input wire reset,
+  input wire i_memen,
+  input wire i_cruclk,
   
-  input wire [12:0] cru_address, // cpu address lines A3-A14 (indexed 13:1 out there)
-  input wire cruout, // cpu address line A15/CRUOUT
-  input wire cruin,
+  input wire [12:0] i_cru_address, // cpu address lines A3-A14 (indexed 13:1 out there)
+  input wire i_cruout, // cpu address line A15/CRUOUT
+  output wire o_cruin,
+  output wire o_en_cruin,
   
   // 74LS612 peripheral, connected to memory_interface
-  input  wire [3:0] bank_sel,
-  output wire bank_mapped,
-  output wire bank_readonly,
-  output wire [6:0] bank_address
+  input  wire [3:0] i_bank_sel,
+  output wire o_bank_mapped,
+  output wire o_bank_readonly,
+  output wire [6:0] o_bank_address
   
   );
   
@@ -87,11 +89,11 @@ module cru_interface(
   reg  [15:0] cru_cardsel;    // cru bit 0 for each card to enable it
   
   wire sams_cardsel = cru_cardsel[14]; // cru address $1E00
-  
-  initial begin
-    
-    sams_transparent = 0; // use default memory map
-    cru_cardsel = 16'h0000; // all cards off. only one at a time should ever be enabled!
+
+  // address banking.
+  // there are 16x4k in address space. there are a possible 128 4k pages in SRAM.
+  reg [1:0]  bank_flags[15:0]; // 00 not mapped, 01 not mapped, 10 ram, 11 rom 
+  reg [6:0]  bank_address[15:0]; // upper 7 bits of real address. 74LS612 has 12 bits.
     
     // iceTea uses the SRAM as follows (the first 64k is very like a basic 4A): 
     // 4k page number, use
@@ -110,42 +112,62 @@ module cru_interface(
     // other needs: 
     // SD buffer (reduce demand on BRAM)
     // how does J1 access the sram? can the J1 only access it through an I/O port.
-    
-    
-    {bank_flags[0],  bank_flags[1]}  = {2'b00, 2'b00}; // $0000 console rom
-    {bank_flags[2],  bank_flags[3]}  = {2'b10, 2'b10}; // $2000 low ram
-    {bank_flags[4],  bank_flags[5]}  = {2'b00, 2'b00}; // $4000 dsr rom or ram
-    {bank_flags[6],  bank_flags[7]}  = {2'b00, 2'b00}; // $6000 cart rom
-    {bank_flags[8],  bank_flags[9]}  = {2'b00, 2'b00}; // $8000 console memory mapped space
-    {bank_flags[10], bank_flags[11]} = {2'b10, 2'b10}; // $A000 high ram
-    {bank_flags[12], bank_flags[13]} = {2'b10, 2'b10}; // $C000 high ram
-    {bank_flags[14], bank_flags[15]} = {2'b10, 2'b10}; // $E000 high ram
-    
-    {bank_addresses[0],  bank_addresses[1]}  = {7'h00, 7'h00}; // $0000 console rom
-    {bank_addresses[2],  bank_addresses[3]}  = {7'h02, 7'h03}; // $2000 low ram
-    {bank_addresses[4],  bank_addresses[5]}  = {7'h00, 7'h00}; // $4000 dsr rom
-    {bank_addresses[6],  bank_addresses[7]}  = {7'h00, 7'h00}; // $6000 cart rom
-    {bank_addresses[8],  bank_addresses[9]}  = {7'h00, 7'h00}; // $8000 memory mapped space
-    {bank_addresses[10], bank_addresses[11]} = {7'h04, 7'h05}; // $A000 high ram
-    {bank_addresses[12], bank_addresses[13]} = {7'h06, 7'h06}; // $C000 high ram
-    {bank_addresses[14], bank_addresses[15]} = {7'h08, 7'h08}; // $E000 high ram
-
-    
-  end
+  wire is_memexp;
   
-  // address banking.
-  // there are 16x4k in address space. there are a possible 128 4k pages in SRAM.
-  reg [1:0]  bank_flags[16]; // 00 not mapped, 01 unused, 10 ram, 11 rom 
-  reg [6:0]  bank_addresses[16]; // upper 7 bits of real address. 74LS612 has 12 bits.
+  assign is_memexp = i_bank_sel[3:1]==3'b001 || i_bank_sel[3:1]==3'b101 || i_bank_sel[3:2]==2'b11; 
+			
+  assign o_bank_mapped   = sams_transparent ? is_memexp  : bank_flags[i_bank_sel][1];
+  assign o_bank_readonly = sams_transparent ? !is_memexp : bank_flags[i_bank_sel][0];
+  assign o_bank_address  = sams_transparent ? {3'b000,i_bank_sel} : bank_address[i_bank_sel];
 
-  assign sams_memexp   = (bank_sel[3:1] == 3'b001) || (bank_sel[3] && (bank_sel[2] || bank_sel[1]));
-  assign bank_mapped   = sams_transparent ? sams_memexp  : bank_flags[bank_sel][1];
-  assign bank_readonly = sams_transparent ? !sams_memexp : bank_flags[bank_sel][0];
-  assign bank_address  = sams_transparent ? {3'b000,bank_sel} : bank_addresses[bank_sel];
 
-  always @(posedge cruclk) begin
-    if (memen) begin // not a CPU memory cycle
-    
-    end
+  // CRU cycles not implemented
+  assign o_en_cruin = 1'b1;
+  assign o_cruin    = 1'b0;
+  
+  always @(posedge i_cruclk or posedge reset) begin
+		if (reset) begin
+			
+			sams_transparent = 1'b1;
+			// use default memory map?
+			cru_cardsel = 16'h0000; // all cards off. only one at a time should ever be enabled!
+			bank_flags[0]  <= 2'b00;
+			bank_flags[1]  <= 2'b00; // $0000 console rom
+			bank_flags[2]  <= 2'b10;
+			bank_flags[3]  <= 2'b10; // $2000 low ram
+			bank_flags[4]  <= 2'b00;
+			bank_flags[5]  <= 2'b00; // $4000 dsr rom or ram
+			bank_flags[6]  <= 2'b00;
+			bank_flags[7]  <= 2'b00; // $6000 cart rom
+			bank_flags[8]  <= 2'b00;
+			bank_flags[9]  <= 2'b00; // $8000 console memory mapped space
+			bank_flags[10] <= 2'b10;
+			bank_flags[11] <= 2'b10; // $A000 high ram
+			bank_flags[12] <= 2'b10;
+			bank_flags[13] <= 2'b10; // $C000 high ram
+			bank_flags[14] <= 2'b10;
+			bank_flags[15] <= 2'b10; // $E000 high ram
+		
+			bank_address[0]  = 7'h00;
+			bank_address[1]  = 7'h00; // $0000 console rom
+			bank_address[2]  = 7'h02;
+			bank_address[3]  = 7'h03; // $2000 low ram
+			bank_address[4]  = 7'h00;
+			bank_address[5]  = 7'h00; // $4000 dsr rom
+			bank_address[6]  = 7'h00;
+			bank_address[7]  = 7'h00; // $6000 cart rom
+			bank_address[8]  = 7'h00;
+			bank_address[9]  = 7'h00; // $8000 memory mapped space
+			bank_address[10] = 7'h04;
+			bank_address[11] = 7'h05; // $A000 high ram
+			bank_address[12] = 7'h06;
+			bank_address[13] = 7'h07; // $C000 high ram
+			bank_address[14] = 7'h08;
+			bank_address[15] = 7'h09; // $E000 high ram
+		
+		end else 
+			if (i_memen) begin // possibly a CPU memory cycle, but let memory_interface tell us
+		
+      end
   end
 endmodule

@@ -9,7 +9,6 @@ module shift_ctrl(reset, clk, o_shld, o_serclk, count, o_done);
   wire      reset, clk;
   wire      o_shld, o_serclk, o_done;
 
-  reg  [5:0] count;
   wire [5:0] count_n;
   
   assign o_shld = !(count[5:1] == 5'b00001);

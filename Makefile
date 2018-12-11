@@ -29,3 +29,4 @@ DEVICE = /dev/cu.usbmodem1411
 PCF_FILE = icetea.pcf
 
 include blackice.mk
+include testbench.mk

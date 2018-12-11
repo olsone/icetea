@@ -1,0 +1,9 @@
+Modest goals
+
+assign pin names from the pcf file
+
+read the control signals, blink lights on memen, we*, dbin*
+
+print a msg to serial for test pass/fail
+
+read the memory bus, light led if you see a particular address

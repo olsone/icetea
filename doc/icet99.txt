@@ -1,0 +1,128 @@
+New hardware: IceTea and SweetTea
+
+Announcing IceTea
+
+My project that began as a FORTI card re-invention has turned into a sidecar peripheral expansion box with huge potential.
+
+First, it is a peripheral expansion box replacement (like NanoPEB.) It provides the 4A with the usual peripherals--disk emulation with a SD card, 32k, a serial port. Plus 512MB paged RAM, lots of Flash for storing ROMs, and a very special sound chip: emulating the FORTI card, with 4 SN76489 sound chips in software (plus: ability to alter the sound chip, for example from a square wave to sine or triangle, with a simple CALL LOAD.)
+
+Yes, IceTea is short for Texas, TI-99, all that.
+
+The Hardware 
+
+IceTea is made up of two parts. SweetTea is a board what connects the 4A to a BlackIce FPGA board. BlackIce provides huge potential. For one, it has standard PMOD ports. You can plug in almost anything. To add servo motor control, digital compass and thermometer,
+there are off-the-shelf PMODs. Basic read/write access is easy with a few CALL LOADs. More complex devices can be programmed and even given a DSR. 
+
+I don't know why you would want to build an an automatic star-finder telescope driven by a 4A, but I will help you do it.
+
+The heart of the IceT99 is the ICE40 HX8K chip and the J1A FORTH CPU. You can write new drivers in Verilog or FORTH.
+
+IceTea is entirely open source, built on the IceStorm toolchain, plus the SwapForth and MeCrisp FORTH language. To add new capabilities, you can connect a terminal to BlackIce and begin interacting with the FORTH prompt. Or you can recompile the IceTea software on a PC/Mac/Linux and update BlackIce through the USB port. If you wish, you can do the programming using a RaspberryPi. 
+
+It will take some time to exploit all the possibilities.
+
+Here is the Hardware feature list:
+
+TI-99/4A 44 pin sidecar connector
+USB flash programming port
+USB serial port
+Arduino shield connector
+3 double PMOD connectors
+2 single PMOD connectors
+Raspberry Pi connector (mainly for reprogramming the BlackIce)
+Onboard Digital-to-Analog (sound chip uses this) and Analog-to-digital.
+
+The details: 
+ARM Cortex M4 32L433 at 48MHz
+SwapFORTH J1A processor at 100MHz (MeCrisp version)
+Ice40 HX4K FPGA (total 8K)
+512KB SRAM
+Built in SD card reader (external SD card reader is an option)
+Olimex expansion connector not usable (repurposed as 4A connector)
+
+
+
+read address bits from LS165
+read data bits from LS245
+write data bits to LS245
+
+on phi3*
+  read address bits
+
+
+do read memory cycle
+  read address bits
+  read from sram
+  write data bits msb
+  on a15
+  write data bits lsb
+  
+do write memory cycle
+  read address bits
+  read data bits msb
+  on a15
+  read data bits lsb
+  write to sram
+  
+do cru read cycle
+  read address bits
+  copy cru bit to cruin
+ uhoh.. timimg is going to be very tight on this! 400ns between addr ready and cruout stable
+cru base decode & cruclk
+cru1000 wds
+cru1100 disk
+cru1300 rs232
+...
+ 
+do cru write cycle
+  read address bits
+  break out by cru base address
+  copy cruout 
+
+
+MEMORY MAP
+
+address decode
+addr[0:2]
+0000 not mapped
+2000
+4000 not always accessible
+6000
+a000
+c000
+e000
+
+memory map of sram in 4k pages
+memory mapper
+divide sram 512k into 8k pages with 6 bit page numbers
+or 4k pages with 7 bit page numbers
+
+unmapped bit [0:2] (no read/write possible)
+readable
+writable
+register file[0:2] 8 bit
+special case: 4000 or 6000 split into two 4k pages
+
+no sams:
+00000 01fff reserved for console roms?
+disk dsr
+rs232 dsr
+
+02000 03fff RAM low memory 
+04000 05fff disk dsr
+06000       4 banks of 32k cart rom/ram
+01000
+
+  
+-- Sound chip
+special write to register by using N=1 or N=2 in a frequency
+(voice 3 moves noise generator too)
+
+works even from basic
+
+CALL SOUND(-1,55930,2)
+CALL SOUND(-1,37286,8)
+
+N=1 set waveform
+N=2 set stereo panning location
+

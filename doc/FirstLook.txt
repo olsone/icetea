@@ -1,0 +1,14 @@
+This is a first look into a project I've been working on for a year and more:
+
+The IceTea expands the TI-99/4A by adding software-defined peripherals as well as
+great hardware enhancement possibilities through standard PMOD connectors.
+
+There are at least three ways to tell you what it's all about...
+
+The first story for why you would want this: it provides 512K RAM, an SD card disk system, and huge potential for other software-defined peripherals. For instance, it includes the FORTi card, which provides 4 copies of the TI sound chip. You'll be able to use the 512K RAM for basic 32K and for SAMS programs. It can be loaded with cartridge ROMs and DSRs.
+
+The second story. It's based on the BlackIce FPGA board with plenty of open expansion connectors. Check out modern devices with PMOD connectors for examples of what could be added. (These include SD card readers, compass, joystick, tiny screens, temperature/humidity sensors, accelerometer, you name it.)
+
+
+FORTH version. It's a FORTH coprocessor (actually, at least two) based on the J1A by James Bowman. I started playing with the J1A processor on Lattice IceStick by writing an SD card/FAT filesystem reader in FORTH. So IceTea starts up running FORTH and has a FORTH console of its own. You might never need that. But FORTH is a great language to write device drivers in.
+

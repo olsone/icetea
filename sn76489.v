@@ -115,7 +115,7 @@ module sn76489(
   reg [WIDTH-1:0] wave_table3[0:63] ;
   reg [WIDTH-1:0] wave_table0[0:63] ;
   parameter NSAMP = 8;
-  reg [WIDTH-1:0] wave_tables[64];
+  reg [WIDTH-1:0] wave_tables[0:319];
   reg [2:0] wt_number[3:0];
   
   initial  begin
