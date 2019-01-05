@@ -1,3 +1,5 @@
+// state and control signals to drive shift_ser_in.
+// lsb of count is there to divide the clock by 2.
 module shift_ctrl(reset, clk, o_shld, o_serclk, count, o_done);
 
   parameter WIDTH = 8;
@@ -19,7 +21,7 @@ module shift_ctrl(reset, clk, o_shld, o_serclk, count, o_done);
   always @(posedge clk)
   begin
       if (!reset)  // negative logic
-				count <= 0;
+				count <= 0; // this could be 1
       else if (!o_done) 
 				count <= count_n;
   end

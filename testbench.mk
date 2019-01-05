@@ -25,3 +25,8 @@ memory_interface_tb: $(MEMORY_TB_FILES)
 	vvp memory_interface_tb
 
 # run with vvp memory_interface_tb
+
+SHIFT_SER_OUT_FILES = shift_ser_out_tb.v shift_ser_out.v
+shift_ser_out_tb: $(SHIFT_SER_OUT_FILES)
+	iverilog -o $@ $(SHIFT_SER_OUT_FILES)
+	vvp $@

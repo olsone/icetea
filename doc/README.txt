@@ -121,6 +121,16 @@ memory_interface.v:297:      : Port 4 (o_data) of shift_ser_in is connected to a
 
 addr_reg cannot be a reg. Change to wire. ADDRESS_DECODE can unscramble it into a reg.
 
+BUG
+Warning: multiple conflicting drivers for chip.\mem.chip_select:
+did you write 'else' not 'else begin/end':
+if (reset) begin
+  a = 0;
+  b = 0;
+  end else
+  a = 0
+b = 0
+   
 ===================
 
 Helpful tools
@@ -287,3 +297,59 @@ i moved leds to the bottom of chip.v and in page 0 addresses
 af29 83ec x0xx
 af33 83fb x0xx
 0cd4 xCxx
+
+test writes to all pages
+7D00 LIMI 0
+7D02 
+7D04 CLR R0
+
+Spi  Addr
+
+56dc 7D06 SETO *R0
+56E4 7D08 AI R0,>2000
+56f4 7D0A
+56ec 7D0C JMP $-8
+
+0400 0 2
+0404 1 3
+4400 2 2
+4404 3 3
+1400 4 6
+1404 5 7
+5400 6 6
+5404 7 7
+0c00 8 a
+0c04 9 b
+4c00 a a
+4c04 b b
+1c00 c e
+1c04 d f
+5c00 e e
+5c04 f f
+
+A2 / BIT 13 is stuck on.
+Look at the input to 165.
+
+replaced 165
+
+Measured A2 at 40-pin header. Captured transition 0->1 in 7D07.
+
+It sure looks like it is shorted to A15
+
+try cutting the cruout trace at the source?
+
+oops
+
+8b11 -> 81e2
+this should be 83e2
+definitely cut a15, but also a6, which was next to it.
+this can't be a hardware issue because SPI looks perfect. 
+SOLVED (shift register would get stuck by initializer to all 1s)
+========================================
+
+CRASH
+icetea is supplying databus when CPU is reading an instruction from page 0
+chip_select logic was backwards!
+
+case for chip_select was in its own always block, moved it into main state block.
+that fixed an issue that state would get stuck in MEM_WRITE.
