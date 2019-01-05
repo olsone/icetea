@@ -347,9 +347,55 @@ this can't be a hardware issue because SPI looks perfect.
 SOLVED (shift register would get stuck by initializer to all 1s)
 ========================================
 
-CRASH
-icetea is supplying databus when CPU is reading an instruction from page 0
+RAM
+1. CRASH icetea is supplying databus when CPU is reading an instruction from page 0
 chip_select logic was backwards!
 
-case for chip_select was in its own always block, moved it into main state block.
+2. case for chip_select was in its own always block, moved it into main state block.
 that fixed an issue that state would get stuck in MEM_WRITE.
+
+returning 1234 from memory shows as 1c84
+1234 1c84
+8888 2222
+4000 0001
+2000 0008
+
+ INC *R5       read, inc, write
+ MOV *R5,R4    read back
+ BL @A2        display
+ 
+ (lsb first, a15 high)
+read:  10 00
+write: 12 00
+read:  00 12
+
+ (lsb first, a15 high)
+read:  00 10
+write: 02 10
+read:  02 10
+
+newest
+
+f000 0f00
+0f00 f000
+00f0 000f
+000f 00f0
+8000 0200
+4000 0100
+2000 0800
+1000 0400
+
+rewrote pcf file
+was     20563147
+
+8040 4080
+
+rewrote 46305721
+8040 8040
+2010 2010
+0804 0804
+0201 0201
+all correct
+
+
+

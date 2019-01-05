@@ -79,16 +79,16 @@ set_io BRESET   11 # 8a    i
 
 
 #pmod 11 lvds pairs 14 & 25
-set_io BDB[2]   34 # 25b  io 
-set_io BDB[0]   33 # 25a  io
-set_io BDB[5]   22 # 14B  io 
-set_io BDB[6]   21 # 14a  io  
+set_io BDB[4]   34 # 25b  io 
+set_io BDB[6]   33 # 25a  io
+set_io BDB[3]   22 # 14B  io 
+set_io BDB[0]   21 # 14a  io  
 
 #pmod 12 lvds pairs 18 & 24
-set_io BDB[3]   32 # 24b  io
-set_io BDB[1]   31 # 24a  io
-set_io BDB[4]   26 # 18b  io
-set_io BDB[7]   25 # 18a  io 
+set_io BDB[5]   32 # 24b  io
+set_io BDB[7]   31 # 24a  io
+set_io BDB[2]   26 # 18b  io
+set_io BDB[1]   25 # 18a  io 
 
 #pmod 13 DIG16-DIG19
 # i2s didn't work out here. were all the switches grounded? try again
