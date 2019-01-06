@@ -250,7 +250,7 @@ module memory_interface(
       end    
     STATE_READ_MEM : begin
 				// fetch word from SRAM
-				data_read_reg =  16'habcd; // i_sram_data; // 16'h2000; //
+				data_read_reg =  16'h8040; // i_sram_data; // 16'h2000; //
 			  // in this state_reg, let combinatorial logic drive o_data_bus.
 				
 			  // wait states: just loop here.
