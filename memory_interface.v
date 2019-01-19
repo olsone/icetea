@@ -43,9 +43,9 @@ module memory_interface(
   wire addr_in_done;
   
   // logic to SRAM
-  reg output_enable; // pos logic to sram
-  reg write_enable;  // pos logic to sram
-  reg chip_select, chip_select_next; // neg logic to sram, rdbena
+  reg output_enable, output_enable_next; // neg logic to sram
+  reg write_enable, write_enable_next;  // neg logic to sram
+  reg chip_select, chip_select_next; // neg logic to sram, rdbena (for now)
   reg [17:0] external_addr;  // address of a 16-bit word
   reg [15:0] data_read_reg;  // 16 bit word
   reg [15:0] data_write_reg; // 16 bit word
@@ -116,11 +116,15 @@ module memory_interface(
    if (reset) begin
      state_reg <= STATE_IDLE;
      addr_reg  <= 16'h0000;
-     chip_select <= 1; // active low
+     chip_select   <= 1; // active low
+     write_enable  <= 1;
+     output_enable <= 1;
    end else begin
      state_reg <= state_next;
      addr_reg  <= addr_next;
-     chip_select <= chip_select_next;
+     chip_select   <= chip_select_next;
+     write_enable  <= write_enable_next;
+     output_enable <= output_enable_next;
    end
   end
   
@@ -157,13 +161,15 @@ module memory_interface(
   // can we guarantee what state_reg this comes up in?
 //  assign o_dbdir    = !(!memen && dbin && bank_mapped && addr_in_done); // 1=reads from 4A bus 0=drives 4A bus
 
+  // only change dir of data bus to 4A when it is reading from one of our addresses
   assign o_dbdir  = 	!(state_reg == STATE_READ_MEM && !chip_select);
+	assign o_rdbena = 1'b0; // read all the time. avoids hi-Z state in scope.
 	// o_dbdir must be correct when o_rdbena=0
 
 // enable only data from 4A
-  assign o_rdbena = !(state_reg == STATE_WRITE_MEM || (state_reg == STATE_READ_MEM && !chip_select));
-	//assign o_rdbena = 1'b1; // '!( is_memexp && (state_reg == STATE_READ_MEM || state_reg == STATE_WRITE_MEM)); // LVC245A output enable*
-	//problems during startup of console. seems ok later. page is 2 or A somehow.
+  // assign o_rdbena = !(state_reg == STATE_WRITE_MEM || (state_reg == STATE_READ_MEM && !chip_select));
+	// !( is_memexp && (state_reg == STATE_READ_MEM || state_reg == STATE_WRITE_MEM)); // LVC245A output enable*
+	
 	//assign o_rdbena = !( is_memexp && (state_reg == STATE_READ_MEM || state_reg == STATE_WRITE_MEM)); // LVC245A output enable*
 
 /////////////////////////////////////////////////////////////
@@ -180,10 +186,12 @@ module memory_interface(
     STATE_IDLE : 
     begin
 			//bank_sel <= 4'b0000;
-			//chip_select_next <= 1; // neg logic
-			write_enable <= 0; // TODO
-			output_enable <= 0;        // TODO 
+			chip_select_next   <= 1; // neg logic
+			write_enable_next  <= 1;
+			output_enable_next <= 1;
 			// good idea to clear evidence from last state_reg?
+			// can't assign reg in more than one loop.
+			// but this loop owns this reg:
 			
       //external_addr <= 18'hxxxx;
 			
@@ -238,19 +246,21 @@ module memory_interface(
                                         addr_in[5], addr_in[3], addr_in[4]};
 
   					 
-//	      is_memexp =  // positive logic
+
 	      //chip_select_next = !(addr_next[15:12] == 4'ha); // neg logic
-				output_enable = dbin; // positive logic
-//				write_enable  <= !dbin && !bank_readonly; // positive logic
-				write_enable  = !dbin; // positive logic
+				output_enable_next <= !dbin; // enable low
+				
+//				write_enable  <= !dbin && !bank_readonly; // enable low
+				// write_enable_next  <= dbin; // enable low. dpn't do this until everything out is stable
 				// if bank_readonly, the write will still appear on the data pins out, but SRAM will not be enabled to accept it.
 					
-				state_next  = dbin ? STATE_READ_MEM : STATE_WRITE_MEM;
+				state_next  <= dbin ? STATE_READ_MEM : STATE_WRITE_MEM;
 
       end    
     STATE_READ_MEM : begin
 				// fetch word from SRAM
-				data_read_reg =  16'h8040; // i_sram_data; // 16'h2000; //
+				
+				data_read_reg <=  i_sram_data; // 16'h2000; //
 			  // in this state_reg, let combinatorial logic drive o_data_bus.
 				
 			  // wait states: just loop here.
@@ -262,24 +272,23 @@ module memory_interface(
       end
     STATE_READ_IO: begin
 				// unused
-				data_read_reg = 16'hc3c3;
 				state_next = STATE_IDLE;
       end
     
     STATE_WRITE_MEM: begin
         if (!we)
 					if (a15) 
-						data_write_reg[7:0] = i_data_bus;  // lsb
+						data_write_reg[7:0] <= i_data_bus;  // lsb
 					else 
-						data_write_reg[15:8] = i_data_bus; // when is databus stable? do we need a condition using phi3? 
-				
-				write_enable = !we; // this will write twice, clobbering high byte on the first time through
+						data_write_reg[15:8] <= i_data_bus; // when is databus stable? do we need a condition using phi3? 
+				// can this stay enabled through the whole multiplex cycle
+				write_enable_next <= we; // this will write twice, clobbering high byte on the first time through. Could use RAMLB, RAMUB
 			
 				// wait states? just loop here.
 				if (!memen && !dbin)
 					state_next = STATE_WRITE_MEM;
 				else
-					state_next = STATE_IDLE; // we was released  
+					state_next = STATE_IDLE; // memen or dbin was released  
 			
       end
     STATE_WRITE_IO: begin
@@ -301,12 +310,12 @@ module memory_interface(
   end
   
   // SRAM interface
-	assign o_sram_data_out_en = (state_reg == STATE_WRITE_MEM || state_reg == STATE_WRITE_IO); // positive logic. turn on output pins when writing data
+	assign o_sram_data_out_en = (state_reg == STATE_WRITE_MEM); // positive logic. turn on output pins when writing data
 	assign o_sram_address = external_addr;
 	assign o_sram_data = data_write_reg;
 
-	assign RAMOE = !output_enable; 
-	assign RAMWE = !write_enable;
+	assign RAMOE = output_enable; 
+	assign RAMWE = write_enable;
 	assign RAMCS = chip_select;
 
   // host interface

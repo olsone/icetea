@@ -397,5 +397,25 @@ rewrote 46305721
 0201 0201
 all correct
 
+Scope
+ABCD CE57
+1010 1011 1100 1101
+1100 1110 0101 0111
+
+8040 4080
+8041 4082
+
+swap test pins:
+(msb first)
+8040 8040
+8041 8041
+
+=============
+read 00 20 = 2000
+write 01 20 = 2001
+read 01 20 = 2001
+
+can see instruction on data bus during IAQ
+c115 mov *r5,r4
 
 

@@ -42,8 +42,8 @@ module chip (
   );
 
   // SRAM signals not use in this design, lets set them to default values
-  assign RAMLB = 1'b1;
-  assign RAMUB = 1'b1;
+  assign RAMLB = 1'b0;
+  assign RAMUB = 1'b0;
 
   // Set unused pmod pins to default
   assign PMOD[15:8] = {8{1'b0}};
@@ -83,7 +83,8 @@ module chip (
     .D_IN_0(DAT_in)
   );
   
-
+  // for another sram example, see https://github.com/mystorm-org/BlackIce-II/tree/dev/examples/sram
+ 
   // Derived Clocks  
   wire sndclk, vdpclk, i2sclk;
   
@@ -128,7 +129,7 @@ module chip (
     .o_sram_data(DAT_out),
     .RAMOE(RAMOE),                     // output enable - low to enable
     .RAMWE(RAMWE),                     // write enable - low to enable
-    .RAMCS(RAMCS),                      // chip select - low to enable
+    .RAMCS(RAMCS),                     // chip select - low to enable
     // cru pind
     .i_cruclk(BCRUCLK),
     .o_cruin(BCRUIN),
