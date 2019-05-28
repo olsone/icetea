@@ -1,0 +1,21 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ATF22LV10C
+D generic 24-pin Programmable Array Logic (PAL) device
+K logic programmable PAL
+F ~
+$ENDCMP
+#
+$CMP ATF22LV10C-28J
+D Atmel 28-pin Programmable Logic Device
+K logic programmable PLD
+F http://ww1.microchip.com/downloads/en/DeviceDoc/doc0780.pdf
+$ENDCMP
+#
+$CMP MxMod-Device
+D Generic connector, double row, 02x15, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,19 @@
+
+
+/* No negative logic declarations assumed; !WE really means WE* low)
+
+EN0 =   (RESET & !MEMEN & DBIN & WE)          /* read1,2    */
+      # (RESET & !MEMEN & !DBIN & WE)         /* transition */
+      # (!RESET)                              /* reset      */
+      
+
+EN1 =   (RESET & !MEMEN & !DBIN & !WE)        /* write1,2   */
+      # (RESET & !MEMEN & !DBIN & WE)         /* transition */
+      # (!RESET)                              /* reset      */
+      
+
+EN2 =   (RESET & MEMEN & !DBIN & WE & CRUCLK) /* cru write  */
+      # (RESET & !MEMEN & !DBIN & !WE & A15)  /* write2     */
+      # (RESET & !MEMEN & DBIN & WE & A15)    /* read2      */
+      # (!RESET)                              /* reset      */
+       

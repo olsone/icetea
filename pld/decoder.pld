@@ -1,0 +1,30 @@
+
+
+/* No negative logic declarations assumed; !WE really means WE* low)
+
+EN0 =   (RESET & !MEMEN & DBIN & WE)          /* read1,2    */
+      # (RESET & !MEMEN & !DBIN & WE)         /* transition */
+      # (!RESET)                              /* reset      */
+      
+
+EN1 =   (RESET & !MEMEN & !DBIN & !WE)        /* write1,2   */
+      # (RESET & !MEMEN & !DBIN & WE)         /* transition */
+      # (!RESET)                              /* reset      */
+      
+
+EN2 =   (RESET & MEMEN & !DBIN & WE & CRUCLK) /* cru write  */
+      # (RESET & !MEMEN & !DBIN & !WE & A15)  /* write2     */
+      # (RESET & !MEMEN & DBIN & WE & A15)    /* read2      */
+      # (!RESET)                              /* reset      */
+      
+/* This decoder began as a '138 plus some AND gates */
+
+!DBEN1 = !DC1 &        !DC3
+!DBEN2 = !DC1 &         DC3
+!DBDIR = !DC1 &  DC2
+!ABEN1 =  DC1 & !DC2 & !DC3
+!ABEN2 =  DC1 & !DC2 &  DC3
+!CRUEN =  DC1 &  DC2
+CRUBIT =  DC1 &  DC2 &  DC3
+
+	  
