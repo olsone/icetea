@@ -1,0 +1,107 @@
+IceTea
+
+IceTea is an open platform for sidecar expansion of the TI-99/4A.
+
+In its standard configuration, it gives you expansion memory (32k or 512K SAMS extended memory),
+an SD card slot, a 12-voice sound generator with sampled sounds, and space to load
+your own peripheral "cards" using standard PMOD headers, DSR RAM and FPGA fabric.
+
+IceTea is based on circuits coded precisely in FPGA, not software emulation. 
+
+IceTea can be re-configured by connecting to its USB port, using free software running on
+platforms including Raspberry Pi, Mac OS X, Windows, or any Linux flavor.
+
+Basic Features
+
+SD card storage.  Your card can contain CF7-style raw disk volumes, or a FAT32 file system with 
+a mixture of V9T9 DSK images and TI-files-as-directories (FIAD) just like you would use in
+Classic99.
+A ROM cartridge library via SD (sorry no GROM.)
+32k RAM (optional if you use a 32k sidecar already)
+SAMS memory in the unused part of the 512K.
+Compatibility with TIPI. You can use TIPI to rebuild all the software for IceTea.
+Open source. All of IceTea, including the hardware and tools required to remake it, is free and open.
+  (Some tools are KiCad, IceStorm, Yosys, Arachne, gforth, swapFORTH, Mecrisp, OSH BlackIce and SweetTea boards, and others.)
+
+Users Who Will Benefit
+======================
+
+Basic: IceTea can be a complete sidecar expansion for the 99/4A for about $99, but still plays nice with FinalGROM and TiPi.
+It supports all programs for the 99/4A that require common expansion peripherals.
+
+Tinkerer: IceTea is a perfect platform to experiment with wiring up hardware. You can begin with a breadboard and TI BASIC.
+
+Expert: IceTea is a great platform to begin learning FPGA programming on the HX8K. The BlackIce board is capable of simulating
+common microcomputers--maybe even a whole 4A core someday. It has an upgrade path to larger FPGAs. 
+
+FORTH Fan: IceTea comes with an FORTH cpu core, enabling some really cool interactions with TI FORTH. 9900 assembly
+can call FORTH subroutines on IceTea. (In fact the disk system is written this way.)
+
+
+Further expansion
+
+PMOD is a simple connector for attaching hardware. IceTea leaves 3 double PMOD connectors in the front
+and 2 single PMOD connectors in the back. A great many plug in modules are available from
+Digilent and others such as: 
+
+Buttons, switches, joystick
+Digital-to-Analog outputs
+Light, temperature, humidity, barometer, range
+Stepper, H-bridge, and Servo control
+Digital compass, accelerometer
+Tiny color screens, 7-segment numerals
+
+
+For instance, adding a stepper motor peripheral:
+
+1. Obtain Digilent STEP PMOD for $18. Attach one or two stepper motors.
+2. Take the GPIO example code for a raw parallel port. Assign it to a CRU base address, or a CPU memory address.
+Decide how much RAM to reserve for the device.
+3. Write 9900 assembly to poke values into the PMOD by either CRU or CPU memory access.
+4. Once you have tested these, you can add more layers of software in the form of a DSR. 
+
+The parallel port example can be controlled with CALL LOAD in Basic or Extended Basic.
+Example code is also provided in FORTH.
+
+A DSR could provide subprograms to BASIC for linear or circular motion control.
+
+
+Use IceTea to augment games with new sound and physical effects. 
+
+Example code shows how to detect when a game is playing a certain sound effect.
+You could set it to trigger a different sound list, or to control external light and vibration.
+
+The sky really is the limit with IceTea.
+
+
+=====
+FORTH
+=====
+
+IceTea comes with its own FORTH language built in.
+
+A program in TI-99/4A memory can call into the IceTea to run programs on its FORTH processor
+and modify data in shared memory. 
+
+For one thing, the SD card driver and FAT32 file system are written in FORTH. Thus, a native
+disk DSR in 4A space gives commands to the FORTH system to read and write blocks or files.
+The SD card can contain CF7-style raw disk volumes, or a FAT32 file system with 
+a mixture of V9T9 DSK images and TI-files-as-directories (FIAD) just like you would use in
+Classic99.
+
+Drivers in FORTH can be developed and debugged interactively by connecting directly to the
+FORTH prompt. They can be modified and tested without restarting the system.
+
+
+
+================
+Interface design
+================
+
+IceTea uses the memory-mapped I/O space of the TI sound chip at 8400 - 87ff. It is recommended
+to disconnect the  sound output of the 4A. 
+
+8400 841e New sound peripheral addresses
+8420 843e Parallel port example
+
+
