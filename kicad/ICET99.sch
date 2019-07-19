@@ -1000,4 +1000,75 @@ Text Label 4600 1150 1    60   ~ 0
 CLKIN
 Text Label 7700 4350 2    60   ~ 0
 CLKIN
+Text Label 8200 1700 0    60   ~ 0
+DEC0
+Text Label 8200 2100 0    60   ~ 0
+DEC2
+Text Label 6800 1600 2    60   ~ 0
+DBEN1
+Text Label 7200 1100 2    60   ~ 0
+DBEN2
+Text Label 6800 1500 2    60   ~ 0
+DBDIR
+Text Label 8200 1600 0    60   ~ 0
+ABEN1
+Text Label 8200 1500 0    60   ~ 0
+ABEN2
+Text Label 7700 1100 1    60   ~ 0
+CRUEN
+Text Label 7800 1100 1    60   ~ 0
+CRUBIT
+Text Label 6800 2000 2    60   ~ 0
+BMEMEN*
+Text Label 7400 2500 3    60   ~ 0
+BWE*
+Text Label 7600 2500 3    60   ~ 0
+BCRUCLK
+Text Label 7300 2500 3    60   ~ 0
+BA15CRUOUT
+Text Label 7200 2500 3    60   ~ 0
+BDBIN
+Text Label 7300 1100 1    60   ~ 0
+ENC2
+Text Label 7400 1100 1    60   ~ 0
+ENC1
+Text Label 7600 1100 1    60   ~ 0
+ENC0
+Text Label 7500 2500 3    60   ~ 0
+GND
+Text Label 8200 1900 0    60   ~ 0
+GND
+Text Label 8200 1800 0    60   ~ 0
+GND
+Text Label 7500 1100 1    60   ~ 0
+GND
+Text Label 6800 1800 2    60   ~ 0
+VCC
+Text Label 6800 1700 2    60   ~ 0
+VCC
+Text Label 6800 2100 2    60   ~ 0
+BRESET*
+$Comp
+L ICET99_Library:ATF22LV10C-28J U?
+U 1 1 5D0CB59A
+P 7600 1900
+F 0 "U?" H 7650 2150 50  0000 L CNN
+F 1 "ATF22LV10C-28J" H 7350 1800 50  0000 L CNN
+F 2 "SMD_Packages:PLCC-28" H 7600 1850 50  0001 C CNN
+F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/doc0780.pdf" H 7600 1850 50  0001 C CNN
+	1    7600 1900
+	0    -1   -1   0   
+$EndComp
+Text Label 8200 2000 0    60   ~ 0
+DEC1
+Text Label 7800 2500 0    60   ~ 0
+GND
+Text Label 6800 1900 2    60   ~ 0
+CLKIN
+Text Notes 5150 1150 0    60   ~ 0
+Errors: DBEN1 DBDIR
+Text Notes 6900 650  0    60   ~ 0
+Correction
+Wire Wire Line
+	7700 2500 7800 2500
 $EndSCHEMATC
